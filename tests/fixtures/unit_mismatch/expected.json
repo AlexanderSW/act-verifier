@@ -1,0 +1,20 @@
+{
+  "scenario": "unit_mismatch",
+  "description": "Позиція 2-2: одиниця «м» замість договірної «м²».",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/unit_mismatch/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": "2-2",
+      "check": "C02_unit_matches",
+      "status": "fail"
+    }
+  ]
+}

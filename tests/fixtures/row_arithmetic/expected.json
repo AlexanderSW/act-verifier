@@ -1,0 +1,20 @@
+{
+  "scenario": "row_arithmetic",
+  "description": "Позиція 2-5: вартість не дорівнює кількість × ціна (різниця 1865,00). Підсумок рахується з написаних вартостей.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/row_arithmetic/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": "2-5",
+      "check": "C04_amount_arithmetic",
+      "status": "fail"
+    }
+  ]
+}

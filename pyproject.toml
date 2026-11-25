@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "act-verifier"
+version = "0.1.0"
+description = "Верифікатор актів КБ-2в / КБ-3: звірка з договором і попередніми актами"
+requires-python = ">=3.11"
+dependencies = ["openpyxl>=3.1", "pandas>=2.1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+mcp = ["mcp>=1.0"]
+
+[project.scripts]
+act-verifier = "act_verifier.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]

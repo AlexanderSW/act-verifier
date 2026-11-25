@@ -1,0 +1,20 @@
+{
+  "scenario": "duplicate_position",
+  "description": "Позиція 4-1 двічі в акті (18 і 4 шт). Сумарно в межах залишку, але дубль треба показати людині.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/duplicate_position/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": "4-1",
+      "check": "C06_no_duplicate_positions",
+      "status": "fail"
+    }
+  ]
+}

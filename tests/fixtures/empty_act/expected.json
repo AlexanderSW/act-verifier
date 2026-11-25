@@ -1,0 +1,20 @@
+{
+  "scenario": "empty_act",
+  "description": "Акт без жодної позиції. Не помилка арифметики, але акт не можна приймати мовчки.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/empty_act/act_03.xlsx"
+  },
+  "expected_verdict": "needs_review",
+  "expected_findings": [
+    {
+      "code": null,
+      "check": "C12_act_not_empty",
+      "status": "warning"
+    }
+  ]
+}

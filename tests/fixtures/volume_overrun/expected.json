@@ -1,0 +1,20 @@
+{
+  "scenario": "volume_overrun",
+  "description": "Позиція 2-1: 350 м² при залишку 334,5 м² (1200 − 410,5 − 455).",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/volume_overrun/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": "2-1",
+      "check": "C05_within_remaining_volume",
+      "status": "fail"
+    }
+  ]
+}

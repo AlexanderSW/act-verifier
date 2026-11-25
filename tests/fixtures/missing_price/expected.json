@@ -1,0 +1,20 @@
+{
+  "scenario": "missing_price",
+  "description": "Позиція 5-2: клітинка ціни порожня, вартість заповнена. Очікуємо unknown, а не pass і не вигадану ціну.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/missing_price/act_03.xlsx"
+  },
+  "expected_verdict": "needs_review",
+  "expected_findings": [
+    {
+      "code": "5-2",
+      "check": "C11_required_values_present",
+      "status": "unknown"
+    }
+  ]
+}

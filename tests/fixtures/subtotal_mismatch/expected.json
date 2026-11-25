@@ -1,0 +1,20 @@
+{
+  "scenario": "subtotal_mismatch",
+  "description": "«Разом без ПДВ» на 10 000,00 менше за суму рядків. ПДВ, всього і КБ-3 узгоджені з неправильним підсумком.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/subtotal_mismatch/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": null,
+      "check": "C07_subtotal",
+      "status": "fail"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "scenario": "ok_many",
+  "description": "Правильний акт, 11 позицій. Усі перевірки pass.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/ok_many/act_03.xlsx"
+  },
+  "expected_verdict": "pass",
+  "expected_findings": []
+}

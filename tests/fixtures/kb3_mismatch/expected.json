@@ -1,0 +1,20 @@
+{
+  "scenario": "kb3_mismatch",
+  "description": "КБ-3 «Всього за звітний період» на 2400,00 більше за КБ-2в «Всього з ПДВ».",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/kb3_mismatch/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": null,
+      "check": "C10_kb3_matches_kb2v",
+      "status": "fail"
+    }
+  ]
+}

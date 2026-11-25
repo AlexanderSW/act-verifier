@@ -1,0 +1,30 @@
+{
+  "scenario": "combo_three_errors",
+  "description": "Три помилки одночасно: ціна 3-2, залишок 2-1, КБ-3. Верифікатор має знайти всі три, а не зупинитися на першій.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/combo_three_errors/act_03.xlsx"
+  },
+  "expected_verdict": "fail",
+  "expected_findings": [
+    {
+      "code": "3-2",
+      "check": "C03_price_matches_contract",
+      "status": "fail"
+    },
+    {
+      "code": "2-1",
+      "check": "C05_within_remaining_volume",
+      "status": "fail"
+    },
+    {
+      "code": null,
+      "check": "C10_kb3_matches_kb2v",
+      "status": "fail"
+    }
+  ]
+}
