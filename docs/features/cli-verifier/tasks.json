@@ -169,7 +169,7 @@
         "tests/test_checks.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t08-act-checks-verify.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T9",

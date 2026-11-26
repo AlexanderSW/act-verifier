@@ -180,6 +180,103 @@ def check_rows(
     return out.findings, out.skipped
 
 
+# ---------------------------------------------------------------- перевірки підсумків і КБ-3
+C07 = "C07_subtotal"
+C08 = "C08_vat"
+C09 = "C09_total_with_vat"
+C10 = "C10_kb3_matches_kb2v"
+C12 = "C12_act_not_empty"
+C13 = "C13_kb3_cumulative"
+
+# Назви надрукованих значень — для повідомлення unknown, коли значення порожнє
+VALUE_LABEL = {
+    "subtotal": "«Разом без ПДВ»",
+    "vat": "«ПДВ»",
+    "total": "«Всього з ПДВ»",
+    "kb3_period_total": "КБ-3 «Всього за звітний період»",
+    "kb3_cumulative_total": "КБ-3 «З початку виконання робіт»",
+}
+
+
+def _act_finding(check, status, act: Act, keys, expected=None, actual=None, message="", extra=()):
+    sources = [act.sources[k] for k in keys if k in act.sources] + list(extra)
+    return Finding(check, status, None, _s(expected), _s(actual), message, sources)
+
+
+def _empty_values(act: Act, keys) -> list[str]:
+    return [VALUE_LABEL[k] for k in keys if getattr(act, k) is None]
+
+
+def _compare(check, act: Act, keys, expected: Decimal, actual: Decimal, extra=()) -> Finding:
+    """Порівняння з допуском ±0,01 — лише надруковані значення (AC-12)."""
+    status = Status.PASS if abs(expected - actual) <= TOLERANCE else Status.FAIL
+    msg = "" if status is Status.PASS else f"різниця {actual - expected}"
+    return _act_finding(check, status, act, keys, expected, actual, msg, extra)
+
+
+def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> tuple[list[Finding], list[Skipped]]:
+    """C07–C10, C12, C13 — у порядку ID. Порожній операнд -> unknown з назвою значення."""
+    out: list[Finding] = []
+
+    # C07 — «Разом без ПДВ» = Σ вартостей рядків
+    no_amount = [r.code for r in act.rows if r.amount is None]
+    keys = ["subtotal"]
+    if no_amount or act.subtotal is None:
+        parts = (["бракує вартості позицій: " + ", ".join(no_amount)] if no_amount else []) + [
+            "порожнє " + v for v in _empty_values(act, keys)]
+        out.append(_act_finding(C07, Status.UNKNOWN, act, keys, actual=act.subtotal, message="; ".join(parts),
+                                extra=[r.source for r in act.rows if r.amount is None]))
+    else:
+        out.append(_compare(C07, act, keys, sum((r.amount for r in act.rows), Decimal(0)), act.subtotal))
+
+    # C08 — ПДВ = 20% від надрукованого «Разом без ПДВ»
+    keys = ["subtotal", "vat"]
+    if empty := _empty_values(act, keys):
+        out.append(_act_finding(C08, Status.UNKNOWN, act, keys, message="порожнє " + ", ".join(empty)))
+    else:
+        out.append(_compare(C08, act, keys, money(act.subtotal * VAT_RATE), act.vat))
+
+    # C09 — «Всього з ПДВ» = Разом + ПДВ (надруковані)
+    keys = ["subtotal", "vat", "total"]
+    if empty := _empty_values(act, keys):
+        out.append(_act_finding(C09, Status.UNKNOWN, act, keys, message="порожнє " + ", ".join(empty)))
+    else:
+        out.append(_compare(C09, act, keys, act.subtotal + act.vat, act.total))
+
+    # C10 — КБ-3 «Всього за звітний період» = КБ-2в «Всього з ПДВ»
+    keys = ["total", "kb3_period_total"]
+    if empty := _empty_values(act, keys):
+        out.append(_act_finding(C10, Status.UNKNOWN, act, keys, message="порожнє " + ", ".join(empty)))
+    else:
+        out.append(_compare(C10, act, keys, act.total, act.kb3_period_total))
+
+    # C12 — в акті є хоч одна позиція
+    n = len(act.rows)
+    out.append(Finding(C12, Status.PASS if n else Status.WARNING, None, "≥ 1", str(n),
+                       "" if n else "в акті немає жодної позиції", [Source(act.file, "КБ-2в")]))
+
+    # C13 — КБ-3 «З початку» = Σ «Всього з ПДВ» попередніх + поточний
+    keys = ["total", "kb3_cumulative_total"]
+    prev_sources = [p.sources["total"] for p in previous_acts if "total" in p.sources]
+    if completeness:
+        out.append(_act_finding(C13, Status.UNKNOWN, act, keys, actual=act.kb3_cumulative_total,
+                                message=completeness, extra=prev_sources))
+    else:
+        empty = [f"«Всього з ПДВ» попереднього акта {p.file}" for p in previous_acts if p.total is None]
+        empty += _empty_values(act, keys)
+        if empty:
+            out.append(_act_finding(C13, Status.UNKNOWN, act, keys, message="порожнє " + ", ".join(empty),
+                                    extra=prev_sources))
+        else:
+            expected = sum((p.total for p in previous_acts), Decimal(0)) + act.total
+            out.append(_compare(C13, act, keys, expected, act.kb3_cumulative_total, extra=prev_sources))
+    return out, []
+
+
+def _act_inputs(a: Act) -> list[Source]:
+    return [r.source for r in a.rows] + [a.sources[k] for k in sorted(a.sources)]
+
+
 def verify(
     act: Act,
     contract: dict[str, ContractPosition],
@@ -188,6 +285,18 @@ def verify(
     """Запускає всі перевірки й збирає звіт.
 
     Не зупиняється на першій помилці: сценарій combo_three_errors
-    очікує всі три знахідки.
+    очікує всі три знахідки. Порядок: рядки (за номером рядка, далі ID), потім акт.
     """
-    raise NotImplementedError
+    completeness = previous_completeness(act, previous_acts)
+    row_findings, row_skipped = check_rows(act, contract, previous_acts, completeness)
+    act_findings, act_skipped = check_act(act, previous_acts, completeness)
+    return Report(
+        findings=row_findings + act_findings,
+        skipped=row_skipped + act_skipped,
+        inputs={
+            "contract": [p.source for p in contract.values()],
+            "previous": [s for p in previous_acts for s in _act_inputs(p)],
+            "act": _act_inputs(act),
+        },
+        skipped_rows=[(a.file, "КБ-2в", list(a.skipped_rows)) for a in [*previous_acts, act] if a.skipped_rows],
+    )

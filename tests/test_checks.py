@@ -207,3 +207,187 @@ def test_findings_in_row_order_then_check_id():
     assert [f.code for f in findings] == ["2-2"] * 7 + ["2-1"] * 7
     assert [f.check for f in findings[:7]] == sorted(ROW_CHECKS)
     assert all(f.sources[0] == Source("act_03.xlsx", "КБ-2в", 9) for f in findings[:7])
+
+
+# ================================================================ T8: підсумки, КБ-3, verify()
+from act_verifier.checks import check_act, verify  # noqa: E402
+
+C07, C08, C09, C10, C12, C13 = ("C07_subtotal", "C08_vat", "C09_total_with_vat", "C10_kb3_matches_kb2v",
+                                "C12_act_not_empty", "C13_kb3_cumulative")
+ACT_CHECKS = {C07, C08, C09, C10, C12, C13}
+PREV_TOTALS = ["503093.4", "772309.2"]  # «Всього з ПДВ» попередніх актів, як надруковано
+
+
+def prev_with_totals(totals=PREV_TOTALS):
+    out = []
+    for i, t in enumerate(totals, 1):
+        p = prev(i, [row("2-1", "1", "485", "485", r=9)], file=f"act_0{i}.xlsx")
+        p.total = None if t is None else D(t)
+        p.sources = {"total": Source(p.file, "КБ-2в", 12)}
+        out.append(p)
+    return out
+
+
+def full_act(rows=None, subtotal="145500", vat="29100", total="174600", kb3p="174600",
+             kb3c=None, number=3):
+    rows = rows if rows is not None else [row("2-1", "300", "485", "145500")]
+    if kb3c is None:
+        kb3c = str(sum((D(t) for t in PREV_TOTALS), D(0)) + D(total))
+    dec = lambda v: None if v is None else D(v)
+    a = Act(number, "листопад 2026", rows, dec(subtotal), dec(vat), dec(total), dec(kb3p), dec(kb3c),
+            "act_03.xlsx")
+    a.sources = {k: Source("act_03.xlsx", "КБ-3" if k.startswith("kb3") else "КБ-2в", r)
+                 for k, r in [("subtotal", 20), ("vat", 21), ("total", 22),
+                              ("kb3_period_total", 7), ("kb3_cumulative_total", 8)]}
+    return a
+
+
+def act_run(a, previous=None):
+    previous = prev_with_totals() if previous is None else previous
+    return check_act(a, previous, previous_completeness(a, previous))
+
+
+def act_by(findings, check):
+    return by(findings, None, check)
+
+
+def test_consistent_act_passes_every_act_check():
+    findings, skipped = act_run(full_act())
+    assert {f.check for f in findings} == ACT_CHECKS
+    assert all(f.status is Status.PASS for f in findings) and skipped == []
+    assert all(f.code is None for f in findings)
+
+
+@pytest.mark.parametrize("subtotal,status", [("145500.01", Status.PASS), ("145500.02", Status.FAIL),
+                                              ("135500", Status.FAIL)])
+def test_c07_subtotal_tolerance(subtotal, status):
+    f = act_by(act_run(full_act(subtotal=subtotal))[0], C07)
+    assert (f.status, f.expected, f.actual) == (status, "145500", subtotal)
+
+
+def test_c07_unknown_on_empty_amount_names_position():
+    rows = [row("2-1", "300", "485", "145500", r=9), row("2-2", "10", "312.4", None, r=10)]
+    f = act_by(act_run(full_act(rows=rows))[0], C07)
+    assert f.status is Status.UNKNOWN and "2-2" in f.message
+
+
+def test_c07_unknown_on_empty_printed_subtotal():
+    findings, _ = act_run(full_act(subtotal=None))
+    for check in (C07, C08, C09):
+        f = act_by(findings, check)
+        assert f.status is Status.UNKNOWN and "Разом без ПДВ" in f.message, check
+
+
+@pytest.mark.parametrize("vat,status", [("29100.01", Status.PASS), ("29100.02", Status.FAIL), ("10185", Status.FAIL)])
+def test_c08_vat_on_printed_subtotal(vat, status):
+    f = act_by(act_run(full_act(vat=vat, total=str(D("145500") + D(vat)), kb3p=str(D("145500") + D(vat))))[0], C08)
+    assert (f.status, f.expected, f.actual) == (status, "29100.00", vat)
+
+
+def test_c08_vat_rounds_half_up():
+    f = act_by(act_run(full_act(subtotal="0.25", vat="0.05", total="0.30", kb3p="0.30",
+                                rows=[row("2-1", "1", "0.25", "0.25")]))[0], C08)
+    assert f.status is Status.PASS and f.expected == "0.05"
+
+
+def test_empty_vat_makes_c08_c09_unknown():
+    findings, _ = act_run(full_act(vat=None))
+    assert act_by(findings, C08).status is Status.UNKNOWN and act_by(findings, C09).status is Status.UNKNOWN
+    assert act_by(findings, C07).status is Status.PASS and act_by(findings, C10).status is Status.PASS
+
+
+def test_c09_total():
+    f = act_by(act_run(full_act(total="174600.02", kb3p="174600.02"))[0], C09)
+    assert (f.status, f.expected, f.actual) == (Status.FAIL, "174600", "174600.02")
+
+
+def test_empty_total_makes_c09_c10_c13_unknown():
+    findings, _ = act_run(full_act(total=None, kb3c="1450002.6"))
+    for check in (C09, C10, C13):
+        f = act_by(findings, check)
+        assert f.status is Status.UNKNOWN and "Всього з ПДВ" in f.message, check
+
+
+def test_kb3_mismatch_fails_only_c10_c13_passes():
+    findings, _ = act_run(full_act(kb3p="177000"))
+    assert {f.check for f in findings if f.status is not Status.PASS} == {C10}
+    f = act_by(findings, C10)
+    assert (f.expected, f.actual) == ("174600", "177000")
+
+
+def test_empty_kb3_period_total_makes_c10_unknown():
+    assert act_by(act_run(full_act(kb3p=None))[0], C10).status is Status.UNKNOWN
+
+
+def test_c12_empty_act_warns():
+    findings, _ = act_run(full_act(rows=[], subtotal="0", vat="0", total="0", kb3p="0"))
+    assert act_by(findings, C12).status is Status.WARNING
+    assert act_by(findings, C07).status is Status.PASS
+
+
+def test_c13_cumulative_tolerance():
+    good = str(sum((D(t) for t in PREV_TOTALS), D(0)) + D("174600"))
+    assert act_by(act_run(full_act(kb3c=good))[0], C13).status is Status.PASS
+    f = act_by(act_run(full_act(kb3c=str(D(good) + D("0.02"))))[0], C13)
+    assert (f.status, f.expected) == (Status.FAIL, good)
+
+
+def test_c13_unknown_on_incomplete_previous():
+    f = act_by(act_run(full_act(), previous=prev_with_totals()[:1])[0], C13)
+    assert (f.status, f.message) == (Status.UNKNOWN, "подано попередніх актів: 1 з 2")
+
+
+def test_c13_unknown_on_empty_previous_total_names_file():
+    f = act_by(act_run(full_act(), previous=prev_with_totals(["503093.4", None]))[0], C13)
+    assert f.status is Status.UNKNOWN and "act_02.xlsx" in f.message
+
+
+def test_c13_unknown_on_empty_cumulative():
+    act_ = full_act()
+    act_.kb3_cumulative_total = None
+    assert act_by(act_run(act_)[0], C13).status is Status.UNKNOWN
+
+
+# ---------------------------------------------------------------- verify()
+def test_verify_lists_every_check_and_puts_act_level_last():
+    rows = [row("2-1", "300", "485", "145500", r=9), row("2-2", "310", "312.4", "96844", r=10)]
+    a = full_act(rows=rows, subtotal="242344", vat="48468.8", total="290812.8", kb3p="290812.8")
+    rep = verify(a, CONTRACT, prev_with_totals())
+    assert rep.verdict == "pass"
+    assert [f.code for f in rep.findings] == ["2-1"] * 7 + ["2-2"] * 7 + [None] * 6
+    assert [f.check for f in rep.findings[-6:]] == sorted(ACT_CHECKS)
+    assert rep.inputs["contract"] == [p.source for p in CONTRACT.values()]
+    assert {s.file for s in rep.inputs["previous"]} == {"act_01.xlsx", "act_02.xlsx"}
+    assert Source("act_03.xlsx", "КБ-2в", 9) in rep.inputs["act"]
+    assert Source("act_03.xlsx", "КБ-3", 8) in rep.inputs["act"]
+
+
+def test_verify_empty_act_only_c12_warning():
+    rep = verify(full_act(rows=[], subtotal="0", vat="0", total="0", kb3p="0"), CONTRACT, prev_with_totals())
+    assert [(f.check, f.status) for f in rep.findings if f.status is not Status.PASS] == [(C12, Status.WARNING)]
+    assert rep.verdict == "needs_review"
+
+
+def test_verify_combo_does_not_stop_at_first_error():
+    # попередні акти prev_with_totals() мають по 1 од. 2-1 -> залишок 1198
+    rows = [row("2-1", "1199", "485", "581515", r=9), row("5-2", "6", "9700", "58200", unit="шт", r=10)]
+    a = full_act(rows=rows, subtotal="639715", vat="127943", total="767658", kb3p="770058")
+    rep = verify(a, CONTRACT, prev_with_totals())
+    assert {(f.code, f.check) for f in rep.findings if f.status is Status.FAIL} == {
+        ("2-1", C05), ("5-2", C03), (None, C10)}
+    assert rep.verdict == "fail"
+
+
+def test_verify_carries_skips_and_skipped_rows():
+    a = full_act(rows=[row("5-2", "6", None, "55200", unit="шт")], subtotal="55200", vat="11040",
+                 total="66240", kb3p="66240")
+    a.skipped_rows = [20, 21]
+    rep = verify(a, CONTRACT, prev_with_totals())
+    assert set(rep.skipped) == {Skipped(C03, "5-2", "порожня ціна"), Skipped(C04, "5-2", "порожня ціна")}
+    assert ("act_03.xlsx", "КБ-2в", [20, 21]) in rep.skipped_rows
+    assert rep.verdict == "needs_review"
+
+
+def test_verify_is_deterministic():
+    a = full_act()
+    assert verify(a, CONTRACT, prev_with_totals()) == verify(a, CONTRACT, prev_with_totals())
