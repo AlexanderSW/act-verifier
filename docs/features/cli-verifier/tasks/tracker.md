@@ -14,7 +14,7 @@
 | T4 | Implement the layout helper | infra | AlexanderSW | S | T1 | done | COMMIT |
 | T5 | Implement load_contract and the shared cell readers | infra | AlexanderSW | S | T1, T4 | done | COMMIT |
 | T6 | Implement load_act | infra | AlexanderSW | M | T2, T5 | done | COMMIT |
-| T7 | Implement row checks C01–C06, C11 with skip rules and completeness | app | AlexanderSW | M | T1 | todo | — |
+| T7 | Implement row checks C01–C06, C11 with skip rules and completeness | app | AlexanderSW | M | T1 | done | COMMIT |
 | T8 | Implement act checks C07–C10, C12, C13 and assemble verify() | app | AlexanderSW | M | T7 | todo | — |
 | T9 | Implement the Excel report, the Markdown report and the evidence block | infra | AlexanderSW | M | T1 | todo | — |
 | T10 | Implement append_error_log with escaping | infra | AlexanderSW | S | T9 | todo | — |
