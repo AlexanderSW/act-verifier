@@ -14,7 +14,7 @@ class InputError(Exception):
     """
 
     KINDS = frozenset({
-        "missing_label", "ambiguous_label", "unreadable_file", "invocation", "overwrite_refused",
+        "missing_label", "ambiguous_label", "duplicate_code", "unreadable_file", "invocation", "overwrite_refused",
     })
 
     def __init__(
@@ -60,8 +60,8 @@ class ContractPosition:
     code: str
     name: str
     unit: str
-    qty: Decimal
-    price: Decimal
+    qty: Decimal | None      # порожня клітинка договору -> None; залежні перевірки дають unknown
+    price: Decimal | None
     source: Source
 
 
@@ -93,6 +93,7 @@ class Act:
     sources: dict[str, Source] = field(default_factory=dict)
     header_row: int | None = None          # рядок заголовків КБ-2в, як знайдено
     skipped_rows: list[int] = field(default_factory=list)  # рядки таблиці без шифру
+    sheet: str = "КБ-2в"                    # назва аркуша КБ-2в, як знайдено за префіксом (ADR-0003)
 
 
 @dataclass

@@ -89,7 +89,7 @@ def _c05(out: _Out, row: ActRow, pos: ContractPosition, previous_acts: list[Act]
         if hits:
             sources.extend(r.source for r in hits)
         else:  # акт переглянуто, позиції в ньому немає — теж джерело
-            sources.append(Source(p.file, "КБ-2в"))
+            sources.append(Source(p.file, p.sheet))
         for r in hits:
             if r.qty is None:
                 unknown = unknown or f"у попередньому акті {p.file} порожня кількість {row.code}"
@@ -101,6 +101,7 @@ def _c05(out: _Out, row: ActRow, pos: ContractPosition, previous_acts: list[Act]
         unknown = "у договорі порожня кількість"
     if unknown:
         out.add(C05, Status.UNKNOWN, row, actual=row.qty, message=unknown, sources=sources)
+        out.skip(C05, row, unknown)  # причина потрапляє в «Не перевірено» блоку доказів (AC-03, AC-11)
         return
     remaining = pos.qty - used
     status = Status.PASS if row.qty <= remaining else Status.FAIL
@@ -149,6 +150,7 @@ def check_rows(
             elif pos.price is None:
                 out.add(C03, Status.UNKNOWN, row, actual=row.price, message="у договорі порожня ціна",
                         sources=[row.source, pos.source])
+                out.skip(C03, row, "у договорі порожня ціна")  # AC-03
             else:
                 ok = row.price == pos.price
                 out.add(C03, Status.PASS if ok else Status.FAIL, row, expected=pos.price, actual=row.price,
@@ -215,7 +217,10 @@ def _compare(check, act: Act, keys, expected: Decimal, actual: Decimal, extra=()
 
 
 def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> tuple[list[Finding], list[Skipped]]:
-    """C07–C10, C12, C13 — у порядку ID. Порожній операнд -> unknown з назвою значення."""
+    """C07–C10, C12, C13 — у порядку ID. Порожній операнд -> unknown з назвою значення.
+
+    Кожна unknown-перевірка акта стоїть і в «Не перевірено» з тією самою причиною (AC-03).
+    """
     out: list[Finding] = []
 
     # C07 — «Разом без ПДВ» = Σ вартостей рядків
@@ -253,7 +258,7 @@ def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> t
     # C12 — в акті є хоч одна позиція
     n = len(act.rows)
     out.append(Finding(C12, Status.PASS if n else Status.WARNING, None, "≥ 1", str(n),
-                       "" if n else "в акті немає жодної позиції", [Source(act.file, "КБ-2в")]))
+                       "" if n else "в акті немає жодної позиції", [Source(act.file, act.sheet)]))
 
     # C13 — КБ-3 «З початку» = Σ «Всього з ПДВ» попередніх + поточний
     keys = ["total", "kb3_cumulative_total"]
@@ -270,7 +275,8 @@ def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> t
         else:
             expected = sum((p.total for p in previous_acts), Decimal(0)) + act.total
             out.append(_compare(C13, act, keys, expected, act.kb3_cumulative_total, extra=prev_sources))
-    return out, []
+    skipped = [Skipped(f.check, None, f.message) for f in out if f.status is Status.UNKNOWN]
+    return out, skipped
 
 
 def _act_inputs(a: Act) -> list[Source]:
@@ -298,5 +304,5 @@ def verify(
             "previous": [s for p in previous_acts for s in _act_inputs(p)],
             "act": _act_inputs(act),
         },
-        skipped_rows=[(a.file, "КБ-2в", list(a.skipped_rows)) for a in [*previous_acts, act] if a.skipped_rows],
+        skipped_rows=[(a.file, a.sheet, list(a.skipped_rows)) for a in [*previous_acts, act] if a.skipped_rows],
     )

@@ -89,7 +89,7 @@ def test_load_contract_duplicate_code_is_not_silently_resolved(tmp_path):
     path = _contract_file(tmp_path, HEADERS, [(1, "2-1", "A", "м²", 10, 5, 50), (2, "2-1", "B", "м²", 3, 5, 15)])
     with pytest.raises(InputError) as e:
         load_contract(path)
-    assert e.value.kind == "ambiguous_label" and e.value.label == "2-1" and e.value.rows == [7, 8]
+    assert (e.value.kind, e.value.label, e.value.sheet, e.value.rows) == ("duplicate_code", "2-1", "Договірна ціна", [7, 8])
 
 
 def test_load_contract_corrupt_file(tmp_path):
@@ -185,10 +185,10 @@ def test_load_act_empty_values_are_none(name, attr, code):
 
 
 def _act_file(tmp_path, *, title="Акт № 3 за листопад 2026 р.", rows=None, totals=None, kb3=True,
-              kb3_items=None, name="act.xlsx"):
+              kb3_items=None, name="act.xlsx", sheet="КБ-2в"):
     wb = Workbook()
     ws = wb.active
-    ws.title = "КБ-2в"
+    ws.title = sheet
     if title is not None:
         ws["A2"] = title
     for c, h in enumerate(ACT_HEADERS, 1):
@@ -239,6 +239,31 @@ def test_act_number(tmp_path, title, number):
     assert ("number" in act.sources) == (title is not None)
 
 
+def test_header_in_row_1_has_no_act_number_even_if_one_is_written_below(tmp_path):
+    """AC-11: номер — лише з заголовка НАД таблицею. Шапка в рядку 1 -> над нею нічого -> None (review 3, finding 2)."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "КБ-2в"
+    for c, h in enumerate(ACT_HEADERS, 1):
+        ws.cell(1, c, h)
+    for c, v in enumerate([1, "2-1", "Монтаж", "м²", 10, 5, 50], 1):
+        ws.cell(2, c, v)
+    for r, (label, value) in enumerate([("Разом без ПДВ", 50), ("ПДВ 20%", 10), ("Всього з ПДВ", 60)], 3):
+        ws.cell(r, 3, label)
+        ws.cell(r, 7, value)
+    ws["A7"] = "Акт № 7 погоджено"  # під таблицею — не заголовок акта
+    k = wb.create_sheet("КБ-3")
+    for i, (label, value) in enumerate([("Вартість робіт за звітний період", 50), ("ПДВ", 10),
+                                        ("Всього за звітний період", 60), ("З початку виконання робіт", 160)], 5):
+        k.cell(i, 1, label)
+        k.cell(i, 2, value)
+    path = tmp_path / "act.xlsx"
+    wb.save(path)
+    act = load_act(path)
+    assert act.header_row == 1 and [r.code for r in act.rows] == ["2-1"]
+    assert act.number is None and "number" not in act.sources
+
+
 def test_empty_value_cell_is_missing_data_not_error(tmp_path):
     path = _act_file(tmp_path, totals=[("Разом без ПДВ", 50), ("ПДВ 20%", None), ("Всього з ПДВ", 60)],
                      kb3_items=[("Вартість робіт за звітний період", 50), ("ПДВ", 10),
@@ -278,3 +303,34 @@ def test_previous_act_needs_only_total(tmp_path):
     with pytest.raises(InputError) as e:
         load_act(_act_file(tmp_path, totals=[("Разом без ПДВ", 50)], kb3=False, name="p2.xlsx"), previous=True)
     assert (e.value.kind, e.value.label) == ("missing_label", "Всього з ПДВ")
+
+
+# ---------------------------------------------------------------- назва аркуша, як знайдено (T17)
+def test_sheet_title_as_found_is_cited_everywhere(tmp_path):
+    """Аркуш знайдено за префіксом «КБ-2в» — у джерелах і пропущених рядках його справжня назва (ADR-0003)."""
+    from act_verifier.checks import verify
+    from act_verifier.models import ContractPosition, Source
+
+    act = load_act(_act_file(tmp_path, title="Акт № 2 за листопад 2026 р.", sheet="КБ-2в акт 2",
+                             rows=[[1, "2-1", "Монтаж", "м²", 10, 5, 50], []]))
+    prev = load_act(_act_file(tmp_path, title="Акт № 1 за жовтень 2026 р.", sheet="КБ-2в (жовтень)",
+                              rows=[[1, "3-1", "Фарбування", "м²", 1, 5, 5]],
+                              totals=[("Всього з ПДВ", 6)], kb3=False, name="prev.xlsx"), previous=True)
+    assert (act.sheet, prev.sheet) == ("КБ-2в акт 2", "КБ-2в (жовтень)")
+
+    contract = {"2-1": ContractPosition("2-1", "Монтаж", "м²", Decimal("100"), Decimal("5"),
+                                        Source("contract.xlsx", "Договірна ціна", 7))}
+    report = verify(act, contract, [prev])
+    sheets = {(s.file, s.sheet) for f in report.findings for s in f.sources}
+    assert ("prev.xlsx", "КБ-2в (жовтень)") in sheets  # C05: позиції в попередньому акті немає
+    assert {sh for file, sh in sheets if file == "act.xlsx"} <= {"КБ-2в акт 2", "КБ-3"}
+    assert not any(sh == "КБ-2в" for _, sh in sheets)
+    assert report.skipped_rows == [("act.xlsx", "КБ-2в акт 2", [10])]
+
+
+def test_load_contract_empty_quantity_and_price_load_as_none_not_zero(tmp_path):
+    """Порожня клітинка договору — брак даних (None), не 0 і не помилка вхідних даних (review 2, finding 1)."""
+    path = _contract_file(tmp_path, HEADERS, [(1, "2-1", "A", "м²", None, 5, 50), (2, "2-2", "B", "м²", 3, None, 15)])
+    contract = load_contract(path)
+    assert (contract["2-1"].qty, contract["2-1"].price) == (None, Decimal("5"))
+    assert (contract["2-2"].qty, contract["2-2"].price) == (Decimal("3"), None)

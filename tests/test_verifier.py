@@ -101,13 +101,37 @@ def test_volume_overrun_c05_numbers_and_sources():
     assert {"contract_boq.xlsx", "act_01_2026-09.xlsx", "act_02_2026-10.xlsx"} <= files
 
 
+def test_combo_three_errors_expected_and_actual():
+    """AC-02: усі три fail — з очікуваним і фактичним значенням, як у файлах фікстури.
+
+    3-2: договір 4800, акт 5100; 2-1: залишок 1200 − 410,5 − 455 = 334,5, акт 350;
+    КБ-3 «Всього за звітний період» 872966,4 проти КБ-2в «Всього з ПДВ» 870566,4.
+    """
+    report = run_scenario("combo_three_errors")
+    fails = {(f.code, f.check): (f.expected, f.actual) for f in report.findings if f.status is Status.FAIL}
+    assert fails == {
+        ("3-2", "C03_price_matches_contract"): ("4800", "5100"),
+        ("2-1", "C05_within_remaining_volume"): ("334.5", "350"),
+        (None, "C10_kb3_matches_kb2v"): ("870566.4", "872966.4"),
+    }
+
+
 def test_incomplete_previous_reason():
     report = run_scenario("incomplete_previous")
     msgs = {f.message for f in report.findings if f.status is Status.UNKNOWN}
     assert msgs == {"подано попередніх актів: 1 з 2"}
+    codes = [f.code for f in report.findings if f.check == "C05_within_remaining_volume"]
+    assert len(codes) == 11
+    reason = "подано попередніх актів: 1 з 2"
+    assert (f"Не перевірено: {', '.join(codes)} — C05 ({reason}); акт — C13 ({reason})."
+            in render_evidence(report).splitlines())
 
 
 def test_empty_amount_c07_names_the_position():
     report = run_scenario("empty_amount")
     f = next(f for f in report.findings if f.check == "C07_subtotal")
     assert f.status is Status.UNKNOWN and "3-3" in f.message
+    # AC-03, AC-05: C07 стоїть у «Не перевірено» з позицією в причині (review 3, finding 1)
+    assert (f"акт — C07 ({f.message})" in next(
+        l for l in render_evidence(report).splitlines() if l.startswith("Не перевірено:")))
+    assert "3-3" in f.message

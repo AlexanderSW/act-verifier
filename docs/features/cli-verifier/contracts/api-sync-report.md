@@ -27,7 +27,7 @@ contract: cli.md
 | `--journal` default path | spec §1 clarify `journal/agent_errors.csv` relative to cwd | high |
 | outcome 0/1/2 | data-model → `Report.verdict`; spec §1; sad F1 | high |
 | outcome 3 | spec §1, AC-06; ADR-0002; sad §8 | high |
-| `InputError.kind` values | ADR-0002 (`missing_label`, `ambiguous_label`, `unreadable_file`, `invocation`, `overwrite_refused`); data-model `InputError` | high |
+| `InputError.kind` values | ADR-0002 (`missing_label`, `ambiguous_label`, `unreadable_file`, `invocation`, `overwrite_refused`; `duplicate_code` added by the ADR-0002 amendment 2026-11-26); data-model `InputError` | high |
 | `InputError.label/file/sheet/rows` | ADR-0002; data-model | high |
 | kind for «input path does not exist» | sad F2 branch; `unreadable_file` by owner decision 2026-11-26 (OQ-A3) | high |
 | Excel sheet «Перевірки» + 6 columns | spec §1 clarify; `report.write_excel` docstring; data-model `Finding` | high |
@@ -46,7 +46,7 @@ contract: cli.md
 ## B. Drift checklist
 
 1. **Command ↔ data-model** *(core)* — ✓. The command reads `ContractPosition`, `Act`, `ActRow` and `Source`, and writes `Report`/`Finding`/`Skipped` (report files) and `JournalLine` (journal). Every output column maps to a data-model field.
-2. **Error identifier ↔ repo error definition** *(core)* — ✓ with a note. The repo's form is the ADR-0002 `InputError.kind` set. It is not yet in code (`models.py` has no `InputError`, audit D1). The contract uses those five kinds verbatim and adds none. A non-existent input path gets `unreadable_file` (owner decision, OQ-A3), so no new kind is needed.
+2. **Error identifier ↔ repo error definition** *(core)* — ✓ with a note. The repo's form is the ADR-0002 `InputError.kind` set. It is not yet in code (`models.py` has no `InputError`, audit D1). The contract uses those five kinds verbatim and adds none. A non-existent input path gets `unreadable_file` (owner decision, OQ-A3), so no new kind is needed. *Amended 2026-11-26 (review 2, finding 2):* the ADR-0002 amendment adds a sixth kind, `duplicate_code` (a «Шифр» repeated in the contract); `contracts/cli.md` §4 lists it.
 3. **Validation ↔ constraint** *(core)* — ✓. Required/optional options match spec §1 clarify. Status literals match the `Status` enum. The journal status subset (`fail|unknown|warning`) matches data-model `JournalLine.status`. Path equality matches the spec's case-insensitive resolved-path rule.
 4. **Contract ↔ sequence** *(supporting)* — ✓ forward. Every `alt` branch of F1–F5 and Critical flow 1 has an outcome row in `cli.md` §3/§4:
    - F1: fail→1, needs_review→2, pass→0.

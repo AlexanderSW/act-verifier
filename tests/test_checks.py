@@ -198,7 +198,9 @@ def test_incomplete_previous_makes_c05_unknown_for_every_position_other_checks_r
         f = by(findings, code, C05)
         assert (f.status, f.message) == (Status.UNKNOWN, "подано попередніх актів: 1 з 2")
         assert all(by(findings, code, c).status is Status.PASS for c in (C01, C02, C03, C04, C06, C11))
-    assert skipped == []
+    # причина потрапляє і в «Не перевірено» блоку доказів (AC-03, AC-11; review finding 1)
+    assert skipped == [Skipped(C05, "2-1", "подано попередніх актів: 1 з 2"),
+                       Skipped(C05, "2-2", "подано попередніх актів: 1 з 2")]
 
 
 # ---------------------------------------------------------------- порядок і Decimal
@@ -333,8 +335,10 @@ def test_c13_cumulative_tolerance():
 
 
 def test_c13_unknown_on_incomplete_previous():
-    f = act_by(act_run(full_act(), previous=prev_with_totals()[:1])[0], C13)
+    findings, skipped = act_run(full_act(), previous=prev_with_totals()[:1])
+    f = act_by(findings, C13)
     assert (f.status, f.message) == (Status.UNKNOWN, "подано попередніх актів: 1 з 2")
+    assert skipped == [Skipped(C13, None, "подано попередніх актів: 1 з 2")]
 
 
 def test_c13_unknown_on_empty_previous_total_names_file():
@@ -373,8 +377,9 @@ def test_verify_combo_does_not_stop_at_first_error():
     rows = [row("2-1", "1199", "485", "581515", r=9), row("5-2", "6", "9700", "58200", unit="шт", r=10)]
     a = full_act(rows=rows, subtotal="639715", vat="127943", total="767658", kb3p="770058")
     rep = verify(a, CONTRACT, prev_with_totals())
-    assert {(f.code, f.check) for f in rep.findings if f.status is Status.FAIL} == {
-        ("2-1", C05), ("5-2", C03), (None, C10)}
+    # кожна з трьох — з очікуваним і фактичним значенням (AC-02)
+    assert {(f.code, f.check, f.expected, f.actual) for f in rep.findings if f.status is Status.FAIL} == {
+        ("2-1", C05, "1198", "1199"), ("5-2", C03, "9200", "9700"), (None, C10, "767658", "770058")}
     assert rep.verdict == "fail"
 
 
@@ -391,3 +396,81 @@ def test_verify_carries_skips_and_skipped_rows():
 def test_verify_is_deterministic():
     a = full_act()
     assert verify(a, CONTRACT, prev_with_totals()) == verify(a, CONTRACT, prev_with_totals())
+
+
+# ---------------------------------------------------------------- порожні кількість / ціна в договорі (review 2, finding 1)
+def contract_with(code, qty, price):
+    """CONTRACT, у якому позиція code має порожню (None) кількість чи ціну, як її читає load_contract."""
+    out = dict(CONTRACT)
+    p = out[code]
+    out[code] = ContractPosition(p.code, p.name, p.unit, None if qty is None else D(qty),
+                                 None if price is None else D(price), p.source)
+    return out
+
+
+def test_empty_contract_quantity_makes_c05_unknown_never_pass():
+    findings, skipped = run([row("2-1", "300", "485", "145500")], contract_=contract_with("2-1", None, "485"))
+    f = by(findings, "2-1", C05)
+    assert (f.status, f.message, f.expected) == (Status.UNKNOWN, "у договорі порожня кількість", None)
+    assert by(findings, "2-1", C03).status is Status.PASS  # ціна є — C03 перевіряється
+    assert skipped == [Skipped(C05, "2-1", "у договорі порожня кількість")]  # AC-03 (review 3, finding 1)
+
+
+def test_empty_contract_price_makes_c03_unknown_never_pass():
+    findings, skipped = run([row("2-1", "300", "485", "145500")], contract_=contract_with("2-1", "1200", None))
+    f = by(findings, "2-1", C03)
+    assert (f.status, f.message, f.expected, f.actual) == (Status.UNKNOWN, "у договорі порожня ціна", None, "485")
+    assert by(findings, "2-1", C05).status is Status.PASS  # кількість є — залишок перевіряється
+    assert skipped == [Skipped(C03, "2-1", "у договорі порожня ціна")]  # AC-03 (review 3, finding 1)
+
+
+@pytest.mark.parametrize("qty,price,check", [(None, "485", C05), ("1200", None, C03)])
+def test_empty_contract_value_gives_needs_review_verdict(qty, price, check):
+    rep = verify(full_act(), contract_with("2-1", qty, price), prev_with_totals())
+    assert [(f.check, f.status) for f in rep.findings if f.status is not Status.PASS] == [(check, Status.UNKNOWN)]
+    assert rep.verdict == "needs_review"
+
+
+# ---------------------------------------------------------------- unknown через брак даних -> «Не перевірено» (review 3, finding 1)
+def assert_every_unknown_is_listed(findings, skipped):
+    """AC-03: кожна перевірка, яку не виконано через брак даних, стоїть у «Не перевірено» з позицією й причиною.
+
+    C11 — сама перевірка наявності значень: вона виконана, її результат unknown; пропущені нею
+    перевірки (C03/C04/C05) уже стоять у skipped.
+    """
+    unknown = {(f.check, f.code, f.message) for f in findings if f.status is Status.UNKNOWN and f.check != C11}
+    assert unknown, "сценарій має давати unknown"
+    assert unknown <= {(s.check, s.code, s.reason) for s in skipped}
+
+
+def test_empty_quantity_in_previous_act_lists_c05():
+    previous = [PREVIOUS[0], prev(2, [row("2-1", None, "485", "1", r=9)], file="act_02.xlsx")]
+    findings, skipped = run([row("2-1", "300", "485", "145500")], previous=previous)
+    assert skipped == [Skipped(C05, "2-1", "у попередньому акті act_02.xlsx порожня кількість 2-1")]
+    assert_every_unknown_is_listed(findings, skipped)
+
+
+@pytest.mark.parametrize("kwargs,checks", [
+    ({"rows": [row("2-1", "300", "485", "145500", r=9), row("2-2", "10", "312.4", None, r=10)]}, {C07}),
+    ({"subtotal": None}, {C07, C08, C09}),
+    ({"vat": None}, {C08, C09}),
+    ({"total": None, "kb3c": "1450002.6"}, {C09, C10, C13}),
+    ({"kb3p": None}, {C10}),
+])
+def test_every_act_level_unknown_is_listed_with_its_reason(kwargs, checks):
+    findings, skipped = act_run(full_act(**kwargs))
+    assert {f.check for f in findings if f.status is Status.UNKNOWN} == checks
+    assert {s.check for s in skipped} == checks and all(s.code is None for s in skipped)
+    assert_every_unknown_is_listed(findings, skipped)
+
+
+def test_empty_previous_total_lists_c13_naming_the_file():
+    findings, skipped = act_run(full_act(), previous=prev_with_totals(["503093.4", None]))
+    assert skipped == [Skipped(C13, None, "порожнє «Всього з ПДВ» попереднього акта act_02.xlsx")]
+    assert_every_unknown_is_listed(findings, skipped)
+
+
+@pytest.mark.parametrize("qty,price", [(None, "485"), ("1200", None)])
+def test_verify_lists_empty_contract_values(qty, price):
+    rep = verify(full_act(), contract_with("2-1", qty, price), prev_with_totals())
+    assert_every_unknown_is_listed(rep.findings, rep.skipped)

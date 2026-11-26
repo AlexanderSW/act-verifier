@@ -34,8 +34,8 @@ erDiagram
         str code PK
         str name
         str unit
-        Decimal qty
-        Decimal price
+        Decimal qty "nullable"
+        Decimal price "nullable"
     }
     ACT {
         int number "nullable"
@@ -46,6 +46,7 @@ erDiagram
         Decimal kb3_period_total "nullable"
         Decimal kb3_cumulative_total "nullable"
         str file
+        str sheet "as found, ADR-0003"
         int header_row "new, ADR-0003"
     }
     ACT_ROW {
@@ -128,13 +129,13 @@ reaches a store; outcome code 3 means no report is written (spec AC-06/07/08/13)
 | `code` | `str` | key of the contract map; unique | «Шифр»; exact match for C01 (docs/checks.md) |
 | `name` | `str` | | «Найменування» |
 | `unit` | `str` | | «Од. виміру»; compared after `strip()` (C02) |
-| `qty` | `Decimal` | non-null in the current type | «Кількість»; base of C05 remaining volume |
-| `price` | `Decimal` | non-null in the current type | «Ціна»; C03 tolerance 0,00 |
+| `qty` | `Decimal \| None` | `None` = empty cell, never 0 | «Кількість»; base of C05 remaining volume; `None` → C05 `unknown` («у договорі порожня кількість») |
+| `price` | `Decimal \| None` | `None` = empty cell, never 0 | «Ціна»; C03 tolerance 0,00; `None` → C03 `unknown` («у договорі порожня ціна») |
 | `source` | `Source` | required | file / sheet / row actually read (ADR-0003) |
 
 **Aggregate root:** the contract map.
 **Access patterns:** `contract[code]` per act row → C01–C05.
-**Constraints:** a duplicate code in the contract is <!-- TBD: input error or a C-check? spec is silent -->. An empty `qty`/`price` cell cannot be represented by the current non-`Optional` type — see the audit, drift item D5.
+**Constraints:** a duplicate code in the contract is an input error (outcome code 3, `InputError("duplicate_code")` naming the code and the competing rows) — neither the first nor the last row is used (decided in implement, recorded after review 2026-11-26, finding 7; own kind since review 2, finding 2 — ADR-0002 amendment). An empty `qty`/`price` cell is read as `None` (missing data, not an input error) — resolves audit drift item D5.
 
 ### `Act`
 
@@ -152,6 +153,7 @@ reaches a store; outcome code 3 means no report is written (spec AC-06/07/08/13)
 | `sources` | `dict[str, Source]` | **new** (ADR-0003) | provenance of each totals / КБ-3 / title value |
 | `header_row` | `int` | **new** (ADR-0003) | header row as found, for the evidence block |
 | `skipped_rows` | `list[int]` | **new** (ADR-0003) | empty rows / rows without a code between table and totals (AC-09) |
+| `sheet` | `str` | always set by `load_act`; defaults to «КБ-2в» for acts built in memory; **new** (ADR-0003, review 2, finding 3) | КБ-2в sheet title as found by prefix (e.g. «КБ-2в акт 3»); cited in every КБ-2в provenance |
 
 **Aggregate root:** root.
 **Access patterns:** previous acts grouped by `number` for the completeness check (K of N−1, AC-11); Σ `qty` by `code` across previous acts → C05 (AC-10).
@@ -214,6 +216,8 @@ Frozen dataclass (value object). Shared by every aggregate — the evidence bloc
 | `check` | `str` | check ID | |
 | `code` | `str \| None` | position code; `None` = act level | |
 | `reason` | `str` | required | e.g. «порожня ціна», «previous acts supplied: K of N−1» (AC-04, AC-11) |
+
+Every `Finding` with status `unknown` caused by missing data (all except C11, which is itself the presence check) has a `Skipped` with the same check, code and reason (= the finding's message), so the evidence block lists it (AC-03).
 
 **Aggregate root:** `Report`.
 

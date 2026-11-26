@@ -67,6 +67,25 @@ def test_scenario_outcome_code(sdir, tmp_path):
     assert not (tmp_path / "journal").exists()  # без --journal журнал не пишеться
 
 
+def test_incomplete_previous_reason_reaches_stdout(tmp_path):
+    exp = load_expected(ROOT / "tests/fixtures/incomplete_previous")
+    res = run(scenario_args(exp, tmp_path / "r"), tmp_path)
+    assert res.returncode == 2
+    line = next(l for l in res.stdout.splitlines() if l.startswith("Не перевірено:"))
+    assert "— C05 (подано попередніх актів: 1 з 2)" in line
+    assert line.endswith("акт — C13 (подано попередніх актів: 1 з 2).")
+
+
+def test_empty_amount_reason_reaches_stdout(tmp_path):
+    """AC-03, AC-05: unknown через брак даних видно в «Не перевірено» на stdout (review 3, finding 1)."""
+    exp = load_expected(ROOT / "tests/fixtures/empty_amount")
+    res = run(scenario_args(exp, tmp_path / "r"), tmp_path)
+    assert res.returncode == 2
+    line = next(l for l in res.stdout.splitlines() if l.startswith("Не перевірено:"))
+    assert line != "Не перевірено: —"
+    assert "акт — C07 (" in line and "3-3" in line.split("акт — C07 (", 1)[1]
+
+
 # ---------------------------------------------------------------- незмінність входів (AC-13)
 @pytest.mark.parametrize("scenario,code", [("ok_many", 0), ("combo_three_errors", 1), ("missing_price", 2),
                                            ("missing_label", 3)])
@@ -106,6 +125,7 @@ def test_journal_location_on_the_act_in_other_case_is_refused(tmp_path):
     (["--act", ROOT / "tests/fixtures/ok_many/act_03.xlsx"], "--contract"),
     (["--contract", CONTRACT], "--act"),
     ([], "--contract"),
+    (["--contr", CONTRACT, "--act", ROOT / "tests/fixtures/ok_many/act_03.xlsx"], "--contr"),
 ])
 def test_invocation_errors_exit_3_never_2(tmp_path, args, needle):
     res = run(args + ["--out", tmp_path / "r"], tmp_path)
@@ -170,5 +190,6 @@ def test_journal_with_new_location_is_created_with_header(tmp_path):
     assert j.read_text(encoding="utf-8") == HEADER + "\n"
 
 
-def test_tracked_journal_is_untouched():
-    assert (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8") == HEADER + "\n"
+def test_tracked_journal_starts_with_the_header():
+    # незмінність за сесію перевіряє conftest.tracked_journal_unchanged; записи в журналі законні
+    assert (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8").splitlines()[0] == HEADER

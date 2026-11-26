@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -32,14 +33,28 @@ class _Parser(argparse.ArgumentParser):
     """argparse без власного виходу з кодом 2: 2 означає needs_review (cli.md §2)."""
 
     def error(self, message: str):
-        for prefix in ("the following arguments are required:", "unrecognized arguments:"):
-            if message.startswith(prefix):
-                raise InputError("invocation", label=message[len(prefix):].strip())
-        raise InputError("invocation", label=message)
+        """Текст argparse англійською не виводиться: лише українською, з назвою параметра (cli.md §3)."""
+        raise InputError("invocation", label=_invocation_text(message))
+
+
+_ARGPARSE = [
+    (re.compile(r"the following arguments are required: (?P<opt>.+)"), "не задано обов'язкові параметри: {opt}"),
+    (re.compile(r"unrecognized arguments: (?P<opt>.+)"), "невідомий параметр: {opt}"),
+    (re.compile(r"argument (?P<opt>\S+?): expected (?:one|at least one) argument"), "параметр {opt} потребує значення"),
+    (re.compile(r"argument (?P<opt>\S+?): .+"), "неправильне значення параметра {opt}"),
+]
+
+
+def _invocation_text(message: str) -> str:
+    for pattern, text in _ARGPARSE:
+        if m := pattern.fullmatch(message.strip()):
+            return text.format(opt=m.group("opt"))
+    return "неправильний виклик"
 
 
 def _parser() -> _Parser:
-    p = _Parser(prog="act-verifier", description="Звірка акта КБ-2в / КБ-3 з договором")
+    # allow_abbrev=False: «--contr» — невідомий параметр (cli.md:51), а не скорочення --contract
+    p = _Parser(prog="act-verifier", description="Звірка акта КБ-2в / КБ-3 з договором", allow_abbrev=False)
     p.add_argument("--contract", type=Path, required=True, help="договірна ціна (.xlsx)")
     p.add_argument("--previous", type=Path, nargs="*", default=[], help="попередні акти (.xlsx)")
     p.add_argument("--act", type=Path, required=True, help="перевірюваний акт (.xlsx)")
@@ -72,6 +87,9 @@ def _message(e: InputError) -> str:
             return f"{where}: не знайдено аркуш «{e.label}»."
         return f"{where}, аркуш «{e.sheet}»: не знайдено підпис «{e.label}»."
     rows = ", ".join(map(str, e.rows))
+    if e.kind == "duplicate_code":
+        return (f"{where}, аркуш «{e.sheet}»: шифр «{e.label}» повторюється в рядках {rows}; "
+                "не береться ні перший, ні останній рядок.")
     if e.label == e.sheet or not e.rows:
         return f"{where}: підпис «{e.label}» неоднозначний ({e.sheet}); перший збіг не використовується."
     return (f"{where}, аркуш «{e.sheet}»: підпис «{e.label}» знайдено в кількох рядках ({rows}); "

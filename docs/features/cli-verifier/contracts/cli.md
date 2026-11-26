@@ -91,6 +91,7 @@ repo uses, see the sync report §B.2).
 | `unreadable_file` (owner decision 2026-11-26, OQ-A3) | a given input path does not exist | the missing file | F2 «an input path does not exist» | AC-06 |
 | `missing_label` | a required layout label has no matching row (list in spec AC-07: sheets, header columns, the three КБ-2в totals labels, the four КБ-3 labels; for a previous act: the sheet «КБ-2в», its header columns and «Всього з ПДВ») | the label, the file and the sheet | F3 «a required label has no matching row» | AC-07 |
 | `ambiguous_label` | more than one row matches a label after normalization | the label, the file, the sheet and the competing rows | F3 «a label matches more than one row» | AC-08 |
+| `duplicate_code` (ADR-0002 amendment 2026-11-26) | a «Шифр» appears in more than one row of the contract — neither the first nor the last row is used | the code, the file, the sheet and the rows | F3 «a label matches more than one row» | AC-08 |
 | `overwrite_refused` | a report path or the journal path equals an input path (resolved, case-insensitive) | that the verifier never writes to its inputs | F2 «a report or journal path equals an input path» | AC-13 |
 
 None of the following is an input error. Each one is missing data, so the run goes on and the
@@ -276,3 +277,9 @@ Nothing is written, and `act_example.xlsx` is byte-for-byte unchanged.
 - The stage-2 assistant tool (roadmap step 2) reuses `load_contract`, `load_act` and `verify`, not this
   command (sad §2). This contract does not bind it.
 - `contract_version` is bumped only by the owner, with a changelog line.
+
+## Changelog
+
+- 2026-11-26 (Draft, `contract_version` unchanged at 0.1.0; a bump is the owner's call): §4 gains the
+  `InputError.kind` value `duplicate_code` (ADR-0002 amendment, review 2 finding 2). Before, a repeated
+  contract «Шифр» was reported as `ambiguous_label`.

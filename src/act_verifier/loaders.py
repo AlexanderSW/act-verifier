@@ -91,17 +91,17 @@ def load_contract(path: Path) -> dict[str, ContractPosition]:
                 code=code,
                 name=_text(_cell(row, cols["Найменування"])),
                 unit=_text(_cell(row, cols["Од. виміру"])),
-                # Порожня кількість/ціна в договорі не підставляється нулем (data-model D5, відкрите питання):
+                # Порожня кількість/ціна в договорі не підставляється нулем (data-model D5):
                 # None іде далі, а перевірки, яким вона потрібна, дають unknown.
                 qty=_dec(_cell(row, cols["Кількість"])),
                 price=_dec(_cell(row, cols["Ціна"])),
                 source=Source(file, ws.title, r),
             )
-        # Дубль шифру в договорі: не беремо ні перший, ні останній (data-model §ContractPosition TBD).
+        # Дубль шифру в договорі: не беремо ні перший, ні останній -> код 3 (data-model §ContractPosition).
         dups = {c: rows for c, rows in rows_by_code.items() if len(rows) > 1}
         if dups:
             code, rows = next(iter(dups.items()))
-            raise InputError("ambiguous_label", label=code, file=file, sheet=ws.title, rows=rows)
+            raise InputError("duplicate_code", label=code, file=file, sheet=ws.title, rows=rows)
         return out
 
 
@@ -116,6 +116,8 @@ def _act_number(ws, header: int, file: str, sources: dict[str, Source]) -> tuple
 
     Немає заголовка або в ньому немає числа — брак даних (None), не помилка вхідних даних (AC-11).
     """
+    if header <= 1:  # над шапкою рядків немає; max_row=0 openpyxl читає як «без межі»
+        return None, None
     hit = find_optional_label_row(ws, "Акт №", max_row=header - 1)
     if hit is None:
         return None, None
@@ -212,4 +214,5 @@ def load_act(path: Path, *, previous: bool = False) -> Act:
         sources=sources,
         header_row=header,
         skipped_rows=skipped,
+        sheet=ws.title,
     )

@@ -79,6 +79,15 @@ def test_evidence_lists_skips_grouped_by_position_and_reason():
     assert text.splitlines()[-1] == "Розбіжностей: 1 unknown. Вердикт: needs_review."
 
 
+def test_evidence_merges_positions_with_the_same_checks_and_reason():
+    reason = "подано попередніх актів: 1 з 2"
+    skipped = [Skipped("C05_within_remaining_volume", "2-1", reason),
+               Skipped("C05_within_remaining_volume", "5-2", reason),
+               Skipped("C13_kb3_cumulative", None, reason)]
+    text = render_evidence(make_report(skipped=skipped))
+    assert f"Не перевірено: 2-1, 5-2 — C05 ({reason}); акт — C13 ({reason})." in text.splitlines()
+
+
 def test_evidence_counts_discrepancies_by_status():
     statuses = {("2-1", "C03_price_matches_contract"): Status.FAIL, ("5-2", "C11_required_values_present"):
                 Status.UNKNOWN, (None, "C12_act_not_empty"): Status.WARNING, (None, "C10_kb3_matches_kb2v"):
@@ -183,7 +192,8 @@ def journal_report():
 
 def test_journal_header_constant_matches_repository_file():
     from conftest import ROOT
-    assert ",".join(JOURNAL_HEADER) + "\n" == (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8")
+    first = (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8").splitlines()[0]
+    assert ",".join(JOURNAL_HEADER) == first
 
 
 def test_journal_created_with_header_and_one_line_per_non_pass(tmp_path):

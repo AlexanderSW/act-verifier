@@ -76,6 +76,39 @@ def test_invocation_errors_exit_3_not_2(tmp_path, capsys, args, needle):
     assert files(out) == []
 
 
+@pytest.mark.parametrize("short", ["--contr", "--prev", "--o", "--jour"])
+def test_abbreviated_option_is_an_invocation_error(tmp_path, capsys, short):
+    """Скорочена назва — невідомий параметр (cli.md:51), а не --contract/--previous/--out/--journal."""
+    out = tmp_path / "r"
+    full = {"--contr": "--contract", "--prev": "--previous", "--o": "--out", "--jour": "--journal"}[short]
+    a = [short if x == full else x for x in argv(out)] + ([short] if full == "--journal" else [])
+    if full == "--out":
+        a = argv(None) + [short, str(out)]
+    assert main(a) == 3
+    err = capsys.readouterr()
+    assert short in err.err and err.out == ""
+    assert files(out) == [] and not (tmp_path / "journal").exists()
+
+
+ENGLISH = ("expected", "argument", "required", "unrecognized", "invalid", "usage", "error:")
+
+
+@pytest.mark.parametrize("args,option,phrase", [
+    (["--contract"], "--contract", "потребує значення"),
+    (["--contract", "c.xlsx", "--act"], "--act", "потребує значення"),
+    (["--contract", "c.xlsx", "--act", "a.xlsx", "--out"], "--out", "потребує значення"),
+    (["--act", "a.xlsx"], "--contract", "не задано обов'язкові параметри"),
+    (["--contract", "c.xlsx", "--act", "a.xlsx", "--fast"], "--fast", "невідомий параметр"),
+    (["--contract", "c.xlsx", "--act", "a.xlsx", "zzz"], "zzz", "невідомий параметр"),
+])
+def test_invocation_messages_are_ukrainian_and_name_the_option(tmp_path, capsys, args, option, phrase):
+    """Жоден англомовний текст argparse не потрапляє в stderr (cli.md §3; review finding 5)."""
+    assert main(args) == 3
+    err = capsys.readouterr().err
+    assert option in err and phrase in err
+    assert not any(word in err.casefold() for word in ENGLISH), err
+
+
 def test_missing_input_file(tmp_path, capsys):
     assert main(argv(tmp_path / "r", act=tmp_path / "nope.xlsx")) == 3
     assert "nope.xlsx" in capsys.readouterr().err
@@ -100,6 +133,24 @@ def test_ambiguous_label_names_rows(tmp_path, capsys):
     assert main(argv(tmp_path / "r", act=ROOT / "tests/fixtures/ambiguous_label/act_03.xlsx")) == 3
     err = capsys.readouterr().err
     assert "ПДВ" in err and "21" in err and "24" in err
+
+
+def test_duplicate_contract_code_is_named_as_a_code(tmp_path, capsys):
+    """Повтор шифру в договорі — не «підпис» і не «перший збіг» (docs/checks.md; review 2, finding 2)."""
+    from openpyxl import load_workbook
+    wb = load_workbook(CONTRACT)
+    ws = wb["Договірна ціна"]
+    assert (ws.cell(7, 2).value, ws.cell(8, 2).value) == ("2-1", "2-2")
+    ws.cell(8, 2).value = "2-1"
+    dup = tmp_path / "contract_dup.xlsx"
+    wb.save(dup)
+    out = tmp_path / "r"
+    assert main(argv(out, contract=dup)) == 3
+    err = capsys.readouterr().err
+    assert ("файл contract_dup.xlsx, аркуш «Договірна ціна»: шифр «2-1» повторюється в рядках 7, 8; "
+            "не береться ні перший, ні останній рядок.") in err
+    assert "підпис" not in err and "перший збіг" not in err
+    assert files(out) == []
 
 
 # ---------------------------------------------------------------- захист входів (AC-13)

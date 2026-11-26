@@ -32,6 +32,8 @@ The spec defines an input error as «verification did not happen» (CONTEXT glos
 
 **Chosen:** Option 1 (owner choice). `InputError` lives in `models.py`; `kind` ∈ {`missing_label`, `ambiguous_label`, `unreadable_file`, `invocation`, `overwrite_refused`}. Loaders wrap openpyxl/zip failures into `unreadable_file`; an `argparse.ArgumentParser` subclass turns parse errors into `invocation`; the overwrite guard raises `overwrite_refused`. `cli.main` is the only place that catches it: Ukrainian message on stderr naming label, file and sheet (and the competing rows for ambiguity), no report, return 3. Any other exception propagates as a bug.
 
+**Amendment 2026-11-26 (review 2, finding 2; owner choice).** The kind set gains `duplicate_code`: a «Шифр» repeated in the contract. It was raised as `ambiguous_label`, whose message calls the code a «підпис» and says only the first match is not used; the rule (docs/checks.md) is that neither row is used. Same handling: caught only in `cli.main`, message names the code, file, sheet and rows, no report, return 3. The decision itself (typed exception, first problem stops the load) is unchanged.
+
 ## Consequences
 
 **Positive**
