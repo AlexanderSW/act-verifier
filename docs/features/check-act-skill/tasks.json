@@ -21,7 +21,7 @@
       "dod": "Drift tests comparing the skill's code table and single bash block with cli.EXIT, cli.EXIT_INPUT_ERROR, cli._parser() options (minus --help) and the «перевірки не було» token from real cli.main() stderr pass, fail naming the item on any mismatch, and the full suite shows 304 + N passed with CLAUDE.md updated to 304 + N.",
       "files_hint": [".claude/skills/check-act/SKILL.md", "tests/test_check_act_skill.py", "CLAUDE.md"],
       "file": "docs/features/check-act-skill/tasks/T2-outcome-map-and-run-command.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T3",

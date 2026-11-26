@@ -9,7 +9,7 @@
 | # | Task | Layer | Owner | Estimate | Blocked by | Status | Step |
 |---|---|---|---|---|---|---|---|
 | T1 | Create the check-act skill file with its identity header and the identity drift tests | ports | AlexanderSW | S | — | done | — |
-| T2 | Add the outcome-code map and run-command block, with drift tests against the verifier's contract | ports | AlexanderSW | M | T1 | todo | — |
+| T2 | Add the outcome-code map and run-command block, with drift tests against the verifier's contract | ports | AlexanderSW | M | T1 | done | — |
 | T3 | Write the skill's run steps: collect inputs, run the verifier, apply the verdict-source rule | ports | AlexanderSW | S | T2 | todo | — |
 | T4 | Write the skill's red lines and the five-section reply format | ports | AlexanderSW | M | T3 | todo | — |
 | T5 | Write the skill's no-verification branch: input errors by kind and crashes | ports | AlexanderSW | S | T3 | todo | — |
