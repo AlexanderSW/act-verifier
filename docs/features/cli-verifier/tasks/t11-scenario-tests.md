@@ -9,8 +9,8 @@ files_hint: ["tests/test_verifier.py", "CLAUDE.md"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "M"
-status: "todo"
-step: ""
+status: "done"
+step: "COMMIT"
 ---
 
 <!-- Self-contained task. Every inlined chunk carries a provenance signature

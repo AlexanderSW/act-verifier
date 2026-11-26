@@ -232,7 +232,7 @@
         "CLAUDE.md"
       ],
       "file": "docs/features/cli-verifier/tasks/t11-scenario-tests.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T12",

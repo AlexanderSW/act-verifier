@@ -18,7 +18,7 @@
 | T8 | Implement act checks C07–C10, C12, C13 and assemble verify() | app | AlexanderSW | M | T7 | done | COMMIT |
 | T9 | Implement the Excel report, the Markdown report and the evidence block | infra | AlexanderSW | M | T1 | done | COMMIT |
 | T10 | Implement append_error_log with escaping | infra | AlexanderSW | S | T9 | done | COMMIT |
-| T11 | Turn the scenario tests green | tests | AlexanderSW | S | T3, T6, T8, T9 | todo | — |
+| T11 | Turn the scenario tests green | tests | AlexanderSW | S | T3, T6, T8, T9 | done | COMMIT |
 | T12 | Implement cli.main | ports | AlexanderSW | M | T6, T8, T9, T10 | todo | — |
 | T13 | Add command-level tests | tests | AlexanderSW | M | T3, T12 | todo | — |
 | T14 | Update docs/checks.md with the spec's rules | docs | AlexanderSW | S | — | todo | — |
