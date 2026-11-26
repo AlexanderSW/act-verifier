@@ -65,7 +65,7 @@
       "dod": "docs/features/check-act-skill/demo.md has three scenario sections (ok_many, combo_three_errors, missing_label), each with a prompt naming all four inputs, the expected behaviour, its own reports/demo/<scenario>/ folder and empty actual-result, stopwatch, prompt-count and red-line checklist fields, plus before/after hash tables.",
       "files_hint": ["docs/features/check-act-skill/demo.md"],
       "file": "docs/features/check-act-skill/tasks/T6-demo-script.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T7",

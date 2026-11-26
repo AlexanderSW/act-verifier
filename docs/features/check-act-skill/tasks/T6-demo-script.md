@@ -9,7 +9,7 @@ files_hint: ["docs/features/check-act-skill/demo.md"]
 owner: "AlexanderSW"
 estimate: "S"           # ~1 h
 context_budget: "S"     # 33 inlined lines, 1 extra file (tests/fixtures/combo_three_errors/expected.json)
-status: "todo"
+status: "done"
 step: ""
 ---
 
