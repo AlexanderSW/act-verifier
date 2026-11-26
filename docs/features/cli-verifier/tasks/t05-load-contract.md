@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/loaders.py", "tests/test_loaders.py"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "M"
-status: "todo"
-step: ""
+status: "done"
+step: "COMMIT"
 ---
 
 <!-- Self-contained task. Every inlined chunk carries a provenance signature

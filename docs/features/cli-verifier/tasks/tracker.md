@@ -12,7 +12,7 @@
 | T2 | Add layout map, expected_error and four layout scenarios to the generator | tests | AlexanderSW | M | — | done | COMMIT |
 | T3 | Add empty-quantity, empty-amount and incomplete-previous-acts scenarios | tests | AlexanderSW | S | T2 | done | COMMIT |
 | T4 | Implement the layout helper | infra | AlexanderSW | S | T1 | done | COMMIT |
-| T5 | Implement load_contract and the shared cell readers | infra | AlexanderSW | S | T1, T4 | todo | — |
+| T5 | Implement load_contract and the shared cell readers | infra | AlexanderSW | S | T1, T4 | done | COMMIT |
 | T6 | Implement load_act | infra | AlexanderSW | M | T2, T5 | todo | — |
 | T7 | Implement row checks C01–C06, C11 with skip rules and completeness | app | AlexanderSW | M | T1 | todo | — |
 | T8 | Implement act checks C07–C10, C12, C13 and assemble verify() | app | AlexanderSW | M | T7 | todo | — |

@@ -102,7 +102,7 @@
         "tests/test_loaders.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t05-load-contract.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T6",
