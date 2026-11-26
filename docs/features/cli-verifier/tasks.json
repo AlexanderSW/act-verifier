@@ -470,7 +470,7 @@
       ],
       "dod": "the Act table matches models.py",
       "file": "docs/features/cli-verifier/tasks/t24-act-sheet-in-data-model.md",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

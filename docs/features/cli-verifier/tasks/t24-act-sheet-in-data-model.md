@@ -9,8 +9,8 @@ files_hint: ["docs/features/cli-verifier/data-model.md"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T24 — List Act.sheet in data-model.md

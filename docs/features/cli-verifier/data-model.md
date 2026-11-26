@@ -152,6 +152,7 @@ reaches a store; outcome code 3 means no report is written (spec AC-06/07/08/13)
 | `sources` | `dict[str, Source]` | **new** (ADR-0003) | provenance of each totals / КБ-3 / title value |
 | `header_row` | `int` | **new** (ADR-0003) | header row as found, for the evidence block |
 | `skipped_rows` | `list[int]` | **new** (ADR-0003) | empty rows / rows without a code between table and totals (AC-09) |
+| `sheet` | `str` | always set by `load_act`; defaults to «КБ-2в» for acts built in memory; **new** (ADR-0003, review 2, finding 3) | КБ-2в sheet title as found by prefix (e.g. «КБ-2в акт 3»); cited in every КБ-2в provenance |
 
 **Aggregate root:** root.
 **Access patterns:** previous acts grouped by `number` for the completeness check (K of N−1, AC-11); Σ `qty` by `code` across previous acts → C05 (AC-10).
