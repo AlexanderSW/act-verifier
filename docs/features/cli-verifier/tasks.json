@@ -277,7 +277,7 @@
         "tests/test_cli.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t13-cli-tests.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T14",

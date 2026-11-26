@@ -146,6 +146,17 @@ def test_write_excel_is_byte_identical_across_runs(tmp_path):
     assert (tmp_path / "a.xlsx").read_bytes() == (tmp_path / "b.xlsx").read_bytes()
 
 
+def test_write_excel_has_no_current_timestamp(tmp_path):
+    import datetime as _dt
+    import zipfile
+    write_excel(make_report(), tmp_path / "a.xlsx")
+    with zipfile.ZipFile(tmp_path / "a.xlsx") as z:
+        core = z.read("docProps/core.xml").decode("utf-8")
+        assert all(i.date_time == (1980, 1, 1, 0, 0, 0) for i in z.infolist())
+    assert str(_dt.date.today().year) not in core
+    assert core.count("2000-01-01T00:00:00Z") == 2  # created і modified
+
+
 def test_write_markdown(tmp_path):
     rep = make_report()
     path = tmp_path / "x" / "r.md"

@@ -19,4 +19,4 @@ pytest -q
 Наприкінці відповіді писати, які тести запускав і що вони показали.
 Середовище: Windows, Git Bash. Тести запускати так:
 .venv/Scripts/python -m pytest -q
-Очікуваний стан після реалізації: 213 passed, 0 xfailed, 0 failed (xfail знято: 21 сценарій зелений — T11 cli-verifier).
+Очікуваний стан після реалізації: 272 passed, 0 xfailed, 0 failed (21 сценарій зелений у test_verifier.py і через команду в test_cli.py — cli-verifier).

@@ -14,8 +14,11 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from openpyxl import Workbook
+from openpyxl.xml.functions import tostring
 
 from .models import Report, Source, Status
+
+_CORE_XML = "docProps/core.xml"
 
 SHEET = "Перевірки"
 COLUMNS = ("шифр", "перевірка", "статус", "очікувано", "фактично", "джерело")
@@ -177,8 +180,10 @@ def write_excel(report: Report, path: Path) -> None:
         ws.column_dimensions[col].width = width
 
     buf = io.BytesIO()
-    wb.save(buf)
-    # перепаковуємо zip з фіксованим часом членів, щоб два прогони дали ті самі байти
+    wb.save(buf)  # openpyxl ставить modified = now під час збереження
+    wb.properties.modified = _FIXED_TIME
+    core = tostring(wb.properties.to_tree())
+    # перепаковуємо zip: фіксований час членів і core.xml без поточного часу -> ті самі байти
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(io.BytesIO(buf.getvalue())) as src, \
@@ -186,7 +191,8 @@ def write_excel(report: Report, path: Path) -> None:
         for info in src.infolist():
             zi = zipfile.ZipInfo(info.filename, date_time=_ZIP_TIME)
             zi.compress_type = zipfile.ZIP_DEFLATED
-            dst.writestr(zi, src.read(info.filename))
+            data = core if info.filename == _CORE_XML else src.read(info.filename)
+            dst.writestr(zi, data)
 
 
 # ---------------------------------------------------------------- журнал
