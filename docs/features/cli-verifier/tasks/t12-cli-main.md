@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/cli.py", "tests/test_cli_unit.py"]
 owner: "AlexanderSW"
 estimate: "M"
 context_budget: "M"
-status: "todo"
-step: ""
+status: "done"
+step: "COMMIT"
 ---
 
 <!-- Self-contained task. Every inlined chunk carries a provenance signature
