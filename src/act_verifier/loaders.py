@@ -212,4 +212,5 @@ def load_act(path: Path, *, previous: bool = False) -> Act:
         sources=sources,
         header_row=header,
         skipped_rows=skipped,
+        sheet=ws.title,
     )

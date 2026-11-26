@@ -185,10 +185,10 @@ def test_load_act_empty_values_are_none(name, attr, code):
 
 
 def _act_file(tmp_path, *, title="Акт № 3 за листопад 2026 р.", rows=None, totals=None, kb3=True,
-              kb3_items=None, name="act.xlsx"):
+              kb3_items=None, name="act.xlsx", sheet="КБ-2в"):
     wb = Workbook()
     ws = wb.active
-    ws.title = "КБ-2в"
+    ws.title = sheet
     if title is not None:
         ws["A2"] = title
     for c, h in enumerate(ACT_HEADERS, 1):
@@ -278,3 +278,26 @@ def test_previous_act_needs_only_total(tmp_path):
     with pytest.raises(InputError) as e:
         load_act(_act_file(tmp_path, totals=[("Разом без ПДВ", 50)], kb3=False, name="p2.xlsx"), previous=True)
     assert (e.value.kind, e.value.label) == ("missing_label", "Всього з ПДВ")
+
+
+# ---------------------------------------------------------------- назва аркуша, як знайдено (T17)
+def test_sheet_title_as_found_is_cited_everywhere(tmp_path):
+    """Аркуш знайдено за префіксом «КБ-2в» — у джерелах і пропущених рядках його справжня назва (ADR-0003)."""
+    from act_verifier.checks import verify
+    from act_verifier.models import ContractPosition, Source
+
+    act = load_act(_act_file(tmp_path, title="Акт № 2 за листопад 2026 р.", sheet="КБ-2в акт 2",
+                             rows=[[1, "2-1", "Монтаж", "м²", 10, 5, 50], []]))
+    prev = load_act(_act_file(tmp_path, title="Акт № 1 за жовтень 2026 р.", sheet="КБ-2в (жовтень)",
+                              rows=[[1, "3-1", "Фарбування", "м²", 1, 5, 5]],
+                              totals=[("Всього з ПДВ", 6)], kb3=False, name="prev.xlsx"), previous=True)
+    assert (act.sheet, prev.sheet) == ("КБ-2в акт 2", "КБ-2в (жовтень)")
+
+    contract = {"2-1": ContractPosition("2-1", "Монтаж", "м²", Decimal("100"), Decimal("5"),
+                                        Source("contract.xlsx", "Договірна ціна", 7))}
+    report = verify(act, contract, [prev])
+    sheets = {(s.file, s.sheet) for f in report.findings for s in f.sources}
+    assert ("prev.xlsx", "КБ-2в (жовтень)") in sheets  # C05: позиції в попередньому акті немає
+    assert {sh for file, sh in sheets if file == "act.xlsx"} <= {"КБ-2в акт 2", "КБ-3"}
+    assert not any(sh == "КБ-2в" for _, sh in sheets)
+    assert report.skipped_rows == [("act.xlsx", "КБ-2в акт 2", [10])]

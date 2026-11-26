@@ -355,7 +355,7 @@
       ],
       "dod": "an act whose sheet is «КБ-2в акт 3» is cited with that title in every source and in skipped rows",
       "file": "docs/features/cli-verifier/tasks/t17-sheet-title-as-found.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T18",

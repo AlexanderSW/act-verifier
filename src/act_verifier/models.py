@@ -93,6 +93,7 @@ class Act:
     sources: dict[str, Source] = field(default_factory=dict)
     header_row: int | None = None          # рядок заголовків КБ-2в, як знайдено
     skipped_rows: list[int] = field(default_factory=list)  # рядки таблиці без шифру
+    sheet: str = "КБ-2в"                    # назва аркуша КБ-2в, як знайдено за префіксом (ADR-0003)
 
 
 @dataclass
