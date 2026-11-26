@@ -17,7 +17,7 @@
         "tests/test_models.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t01-domain-models.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T2",
