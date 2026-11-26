@@ -21,6 +21,6 @@
 | T11 | Turn the scenario tests green | tests | AlexanderSW | S | T3, T6, T8, T9 | done | COMMIT |
 | T12 | Implement cli.main | ports | AlexanderSW | M | T6, T8, T9, T10 | done | COMMIT |
 | T13 | Add command-level tests | tests | AlexanderSW | M | T3, T12 | done | COMMIT |
-| T14 | Update docs/checks.md with the spec's rules | docs | AlexanderSW | S | — | todo | — |
+| T14 | Update docs/checks.md with the spec's rules | docs | AlexanderSW | S | — | done | COMMIT |
 
 **Total:** 14 tasks, ~5 person-days (S ≈ 0.25 d, M ≈ 0.5 d).

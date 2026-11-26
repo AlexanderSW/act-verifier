@@ -295,7 +295,7 @@
         "docs/checks.md"
       ],
       "file": "docs/features/cli-verifier/tasks/t14-checks-catalog-docs.md",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }
