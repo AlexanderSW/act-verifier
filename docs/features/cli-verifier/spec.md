@@ -9,7 +9,7 @@ feature_size: "S"
 # Spec — cli-verifier
 
 > **Glossary:** [CONTEXT](../../../CONTEXT.md) (repo-root; no feature-level CONTEXT)
-> **Reference module / docs / channels used:** `docs/idea-brief.md` (§2–§8, outcome `ready-for-specify`), `docs/checks.md`, `README.md` («Формат вхідних файлів», «План реалізації»), `CLAUDE.md`, `src/act_verifier/*.py`, `tests/*.py`, `scripts/generate_fixtures.py`, `tests/fixtures/*/expected.json`.
+> **Reference module / docs / channels used:** `docs/features/cli-verifier/idea-brief.md` (§2–§8, outcome `ready-for-specify`), `docs/checks.md`, `README.md` («Формат вхідних файлів», «План реалізації»), `CLAUDE.md`, `src/act_verifier/*.py`, `tests/*.py`, `scripts/generate_fixtures.py`, `tests/fixtures/*/expected.json`.
 
 ## 1. Context
 
