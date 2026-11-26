@@ -87,7 +87,7 @@
       "dod": "Manual: all three «Фактичний результат» fields in demo.md hold what the L1 agent actually did (deviations included), input hashes before and after are equal for all 6 inputs, the journal is unchanged in git status, and the red-line checklist is filled per scenario.",
       "files_hint": ["docs/features/check-act-skill/demo.md"],
       "file": "docs/features/check-act-skill/tasks/T8-demo-rehearsal.md",
-      "status": "todo"
+      "status": "blocked"
     }
   ]
 }

@@ -15,6 +15,6 @@
 | T5 | Write the skill's no-verification branch: input errors by kind and crashes | ports | AlexanderSW | S | T3 | done | — |
 | T6 | Write the demo script demo.md with empty actual-result fields | docs | AlexanderSW | S | — | done | — |
 | T7 | Add the README section «Агент L1: Skill check-act», mark the draft superseded | docs | AlexanderSW | S | — | done | — |
-| T8 | Rehearse the three demo scenarios and record actual results (manual) | tests | AlexanderSW | M | T4, T5, T6 | todo | — |
+| T8 | Rehearse the three demo scenarios and record actual results (manual) | tests | AlexanderSW | M | T4, T5, T6 | blocked | RED — manual: owner rehearsal in a fresh session (hashes «до» filled) |
 
 **Total:** 8 tasks, ~1 person-day (≈ 10.5 h; T8 is manual and needs the owner at the keyboard).

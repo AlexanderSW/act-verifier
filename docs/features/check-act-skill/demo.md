@@ -14,12 +14,12 @@
 
 | Файл | sha256 (до) |
 |---|---|
-| `data/synthetic/contract_boq.xlsx` | |
-| `data/synthetic/act_01_2026-09.xlsx` | |
-| `data/synthetic/act_02_2026-10.xlsx` | |
-| `tests/fixtures/ok_many/act_03.xlsx` | |
-| `tests/fixtures/combo_three_errors/act_03.xlsx` | |
-| `tests/fixtures/missing_label/act_03.xlsx` | |
+| `data/synthetic/contract_boq.xlsx` | `929ad50e58442640807c41860794d65c18bb7b08b97de7ec6dc08d1718530da3` |
+| `data/synthetic/act_01_2026-09.xlsx` | `edad93a118591d676c3c7c298d94fe159e0a3f915d0a05939596f2e69e3fbcde` |
+| `data/synthetic/act_02_2026-10.xlsx` | `59f373504c35741608268b7e7682c3e2e310ec2b9612528d434c51327df6c537` |
+| `tests/fixtures/ok_many/act_03.xlsx` | `25dfa17f8e5af6289f3d6706f5d11ec7299d519eb4db60801a68b8d26f301e19` |
+| `tests/fixtures/combo_three_errors/act_03.xlsx` | `b12e3dc5ee622a8dd87ae8af4c2c7f7acc60c513651168d0702fa24506b2c6f4` |
+| `tests/fixtures/missing_label/act_03.xlsx` | `8d1670875261de9c3448c02c42bdd46679839691ccfdaf448baad49bf10c9788` |
 
 Усі три акти називаються `act_03.xlsx`, тому кожен сценарій пише у власну теку звіту `reports/demo/<сценарій>/` (AC-09) — звіт одного сценарію ніколи не лежить у теці іншого.
 

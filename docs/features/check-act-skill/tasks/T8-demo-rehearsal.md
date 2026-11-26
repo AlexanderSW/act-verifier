@@ -9,8 +9,8 @@ files_hint: ["docs/features/check-act-skill/demo.md"]
 owner: "AlexanderSW"
 estimate: "M"           # ~1.5 h, manual — a live L1 agent session is required
 context_budget: "S"     # 33 inlined lines, 2 files in play (demo.md, the live SKILL.md)
-status: "todo"
-step: ""
+status: "blocked"
+step: "RED — manual: owner rehearsal in a fresh session (hashes «до» filled)"
 ---
 
 <!-- To the executing agent: work from what is inlined here. If a slice is insufficient, ambiguous,
