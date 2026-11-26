@@ -19,7 +19,7 @@ The verifier checks any act in a known layout against the contract price and pre
 
 | # | Step | Source | Size | Status |
 |---|---|---|:---:|---|
-| 1 | Stage 1 command-line verifier: the project owner verifies an act and gets a verdict, a findings report and an evidence block → [`docs/features/cli-verifier/`](features/cli-verifier/spec.md) | `docs/idea-brief.md` §7 Recommendation | S | spec'd |
+| 1 | Stage 1 command-line verifier: the project owner verifies an act and gets a verdict, a findings report and an evidence block → [`docs/features/cli-verifier/`](features/cli-verifier/spec.md) | `docs/idea-brief.md` §7 Recommendation | S | building |
 | 2 | Assistant-agent tool: an agent calls «verify act» and «list checks» and gets the verdict, findings and evidence block | `README.md` § План реалізації (step 5); `src/act_verifier/mcp_server.py` docstring | S | idea |
 | 3 | Deferred layout and data scenarios: numbers written as text, position codes with other hyphens, zero quantity, a cumulative КБ-3 mismatch scenario | `docs/checks.md` § Наступні сценарії; `docs/idea-brief.md` §5 Out of scope | S | idea |
 | 4 | Verify the first real employer act → see [Not yet specified](#not-yet-specified) | `docs/idea-brief.md` §8 Open questions | fog | idea |

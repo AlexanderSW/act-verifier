@@ -17,3 +17,6 @@ pytest -q
 ```
 Готово = усі сценарії в test_verifier.py зелені (не xfail) і test_fixtures_integrity.py зелений.
 Наприкінці відповіді писати, які тести запускав і що вони показали.
+Середовище: Windows, Git Bash. Тести запускати так:
+.venv/Scripts/python -m pytest -q
+Очікуваний стан після реалізації: 272 passed, 0 xfailed, 0 failed (21 сценарій зелений у test_verifier.py і через команду в test_cli.py — cli-verifier).

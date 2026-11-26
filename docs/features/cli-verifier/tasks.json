@@ -1,0 +1,301 @@
+{
+  "slug": "cli-verifier",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Extend models with InputError, Skipped and per-value provenance",
+      "layer": "domain",
+      "deps": [],
+      "acs": [
+        "AC-03",
+        "AC-07",
+        "AC-08"
+      ],
+      "dod": "`tests/test_models.py` passes (`.venv/Scripts/python -m pytest -q tests/test_models.py`)",
+      "files_hint": [
+        "src/act_verifier/models.py",
+        "tests/test_models.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t01-domain-models.md",
+      "status": "done"
+    },
+    {
+      "id": "T2",
+      "title": "Add layout map, expected_error and four layout scenarios to the fixture generator",
+      "layer": "tests",
+      "deps": [],
+      "acs": [
+        "AC-07",
+        "AC-08",
+        "AC-09",
+        "AC-15"
+      ],
+      "dod": "`.venv/Scripts/python -m pytest -q tests/test_fixtures_integrity.py` green, including the new layout-fixture consistency tests",
+      "files_hint": [
+        "scripts/generate_fixtures.py",
+        "tests/fixtures/",
+        "data/synthetic/",
+        "tests/test_fixtures_integrity.py",
+        "CLAUDE.md"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t02-generator-layout-scenarios.md",
+      "status": "done"
+    },
+    {
+      "id": "T3",
+      "title": "Add empty-quantity, empty-amount and incomplete-previous-acts scenarios to the generator",
+      "layer": "tests",
+      "deps": [
+        "T2"
+      ],
+      "acs": [
+        "AC-05",
+        "AC-11",
+        "AC-15"
+      ],
+      "dod": "`.venv/Scripts/python -m pytest -q tests/test_fixtures_integrity.py` green over all 21 fixtures",
+      "files_hint": [
+        "scripts/generate_fixtures.py",
+        "tests/fixtures/",
+        "data/synthetic/",
+        "tests/test_fixtures_integrity.py",
+        "CLAUDE.md"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t03-generator-data-scenarios.md",
+      "status": "done"
+    },
+    {
+      "id": "T4",
+      "title": "Implement the layout helper: normalize and find sheet, header row and label rows",
+      "layer": "infra",
+      "deps": [
+        "T1"
+      ],
+      "acs": [
+        "AC-07",
+        "AC-08",
+        "AC-09"
+      ],
+      "dod": "`tests/test_layout.py` passes",
+      "files_hint": [
+        "src/act_verifier/layout.py",
+        "tests/test_layout.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t04-layout-helper.md",
+      "status": "done"
+    },
+    {
+      "id": "T5",
+      "title": "Implement load_contract and the shared cell readers",
+      "layer": "infra",
+      "deps": [
+        "T1",
+        "T4"
+      ],
+      "acs": [
+        "AC-07",
+        "AC-08"
+      ],
+      "dod": "`tests/test_loaders.py` (contract part) passes",
+      "files_hint": [
+        "src/act_verifier/loaders.py",
+        "tests/test_loaders.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t05-load-contract.md",
+      "status": "done"
+    },
+    {
+      "id": "T6",
+      "title": "Implement load_act: КБ-2в table, totals, КБ-3 values, act number and provenance",
+      "layer": "infra",
+      "deps": [
+        "T2",
+        "T5"
+      ],
+      "acs": [
+        "AC-05",
+        "AC-07",
+        "AC-08",
+        "AC-09"
+      ],
+      "dod": "`tests/test_loaders.py` passes, including rows-equal-`layout`-map assertions for both layout fixtures",
+      "files_hint": [
+        "src/act_verifier/loaders.py",
+        "tests/test_loaders.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t06-load-act.md",
+      "status": "done"
+    },
+    {
+      "id": "T7",
+      "title": "Implement row checks C01–C06, C11 with skip rules and previous-acts completeness",
+      "layer": "app",
+      "deps": [
+        "T1"
+      ],
+      "acs": [
+        "AC-02",
+        "AC-04",
+        "AC-05",
+        "AC-10",
+        "AC-11"
+      ],
+      "dod": "`tests/test_checks.py` (row part) passes",
+      "files_hint": [
+        "src/act_verifier/checks.py",
+        "tests/test_checks.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t07-row-checks.md",
+      "status": "done"
+    },
+    {
+      "id": "T8",
+      "title": "Implement act checks C07–C10, C12, C13 and assemble verify()",
+      "layer": "app",
+      "deps": [
+        "T7"
+      ],
+      "acs": [
+        "AC-01",
+        "AC-02",
+        "AC-05",
+        "AC-11",
+        "AC-12",
+        "AC-16"
+      ],
+      "dod": "`tests/test_checks.py` passes (row + act parts)",
+      "files_hint": [
+        "src/act_verifier/checks.py",
+        "tests/test_checks.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t08-act-checks-verify.md",
+      "status": "done"
+    },
+    {
+      "id": "T9",
+      "title": "Implement the Excel report, the Markdown report and the evidence block",
+      "layer": "infra",
+      "deps": [
+        "T1"
+      ],
+      "acs": [
+        "AC-03",
+        "AC-09"
+      ],
+      "dod": "`tests/test_report.py` (report + evidence part) passes",
+      "files_hint": [
+        "src/act_verifier/report.py",
+        "tests/test_report.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t09-report-evidence.md",
+      "status": "done"
+    },
+    {
+      "id": "T10",
+      "title": "Implement append_error_log with header creation and formula-injection escaping",
+      "layer": "infra",
+      "deps": [
+        "T9"
+      ],
+      "acs": [
+        "AC-14"
+      ],
+      "dod": "journal tests pass and never touch `journal/agent_errors.csv`",
+      "files_hint": [
+        "src/act_verifier/report.py",
+        "tests/test_report.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t10-error-journal.md",
+      "status": "done"
+    },
+    {
+      "id": "T11",
+      "title": "Turn the scenario tests green: drop xfail, assert expected_error and layout rows",
+      "layer": "tests",
+      "deps": [
+        "T3",
+        "T6",
+        "T8",
+        "T9"
+      ],
+      "acs": [
+        "AC-01",
+        "AC-02",
+        "AC-04",
+        "AC-09",
+        "AC-10",
+        "AC-15"
+      ],
+      "dod": "`.venv/Scripts/python -m pytest -q tests/test_verifier.py` → 21 passed, 0 xfailed",
+      "files_hint": [
+        "tests/test_verifier.py",
+        "CLAUDE.md"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t11-scenario-tests.md",
+      "status": "done"
+    },
+    {
+      "id": "T12",
+      "title": "Implement cli.main: options, overwrite guard, orchestration and outcome codes",
+      "layer": "ports",
+      "deps": [
+        "T6",
+        "T8",
+        "T9",
+        "T10"
+      ],
+      "acs": [
+        "AC-01",
+        "AC-06",
+        "AC-13",
+        "AC-14"
+      ],
+      "dod": "`tests/test_cli_unit.py` passes; exit code 2 never produced for an invocation error",
+      "files_hint": [
+        "src/act_verifier/cli.py",
+        "tests/test_cli_unit.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t12-cli-main.md",
+      "status": "done"
+    },
+    {
+      "id": "T13",
+      "title": "Add command-level tests: every scenario's outcome code, immutability, determinism, timing, journal",
+      "layer": "tests",
+      "deps": [
+        "T3",
+        "T12"
+      ],
+      "acs": [
+        "AC-06",
+        "AC-13",
+        "AC-14",
+        "AC-15"
+      ],
+      "dod": "`.venv/Scripts/python -m pytest -q` → all green: no xfail, every scenario passes in both `test_verifier.py` and `test_cli.py`, integrity suite green",
+      "files_hint": [
+        "tests/test_cli.py"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t13-cli-tests.md",
+      "status": "done"
+    },
+    {
+      "id": "T14",
+      "title": "Update docs/checks.md with the skip, unknown and input-error rules fixed by the spec",
+      "layer": "docs",
+      "deps": [],
+      "acs": [
+        "AC-05",
+        "AC-07",
+        "AC-11",
+        "AC-12"
+      ],
+      "dod": "every rule listed in spec §8 OQ 2 appears in `docs/checks.md`, in Ukrainian, with no rule beyond the spec",
+      "files_hint": [
+        "docs/checks.md"
+      ],
+      "file": "docs/features/cli-verifier/tasks/t14-checks-catalog-docs.md",
+      "status": "done"
+    }
+  ]
+}

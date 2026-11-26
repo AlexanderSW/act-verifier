@@ -192,7 +192,25 @@ def _num(v):
     return None if v is None else float(v)
 
 
-def write_act(path: Path, act: Act) -> None:
+def write_act(
+    path: Path,
+    act: Act,
+    *,
+    header_shift: int = 0,
+    gap: tuple = (),
+    omit_label: str | None = None,
+    extra_label: tuple[str, Decimal] | None = None,
+) -> dict:
+    """Пише акт і повертає рядки, які використав (для layout у expected.json, ADR-0004).
+
+    header_shift — на скільки рядків нижче README-рядка стоїть заголовок таблиці;
+    gap — рядки між останньою позицією і «Разом без ПДВ»: None = порожній рядок,
+          str = примітка без шифру в колонці C;
+    omit_label — підпис підсумку КБ-2в, який не записується (сценарій «бракує підпису»);
+    extra_label — (текст, значення) додаткового рядка під «Всього з ПДВ» (сценарій «двозначний підпис»).
+    """
+    header_row = HEADER_ROW + header_shift
+    used = {"header_row": header_row, "first_data_row": header_row + 1}
     wb = Workbook()
     ws = wb.active
     ws.title = "КБ-2в"
@@ -204,11 +222,11 @@ def write_act(path: Path, act: Act) -> None:
     ws["A5"] = CONTRACT
     ws["A6"] = OBJECT
     for i, h in enumerate(ACT_HEADERS, 1):
-        c = ws.cell(HEADER_ROW, i, h)
+        c = ws.cell(header_row, i, h)
         c.font = Font(bold=True)
         c.alignment = Alignment(wrap_text=True, vertical="center")
         c.border = BOX
-    r = HEADER_ROW + 1
+    r = header_row + 1
     for n, row in enumerate(act.rows, 1):
         vals = [n, row.code, row.name, row.unit, _num(row.qty), _num(row.price), _num(row.amount)]
         for i, v in enumerate(vals, 1):
@@ -217,12 +235,28 @@ def write_act(path: Path, act: Act) -> None:
         ws.cell(r, 6).number_format = NUM
         ws.cell(r, 7).number_format = NUM
         r += 1
-    ws.cell(r, 3, "Разом без ПДВ").font = Font(bold=True)
-    ws.cell(r, 7, float(act.subtotal)).number_format = NUM
-    ws.cell(r + 1, 3, "ПДВ 20%")
-    ws.cell(r + 1, 7, float(act.vat)).number_format = NUM
-    ws.cell(r + 2, 3, "Всього з ПДВ").font = Font(bold=True)
-    ws.cell(r + 2, 7, float(act.total)).number_format = NUM
+    skipped = []
+    for item in gap:
+        if item is not None:
+            ws.cell(r, 3, item)
+        skipped.append(r)
+        r += 1
+    if skipped:
+        used["skipped_rows"] = skipped
+    totals = [("subtotal_row", "Разом без ПДВ", act.subtotal, True),
+              ("vat_row", "ПДВ 20%", act.vat, False),
+              ("total_row", "Всього з ПДВ", act.total, True)]
+    for i, (key, label, value, bold) in enumerate(totals):
+        if label == omit_label:
+            continue
+        c = ws.cell(r + i, 3, label)
+        if bold:
+            c.font = Font(bold=True)
+        ws.cell(r + i, 7, _num(value)).number_format = NUM
+        used[key] = r + i
+    if extra_label is not None:
+        ws.cell(r + 4, 3, extra_label[0])
+        ws.cell(r + 4, 7, _num(extra_label[1])).number_format = NUM
     _set_widths(ws, [7, 12, 55, 10, 12, 16, 18])
 
     kb3 = wb.create_sheet("КБ-3")
@@ -238,10 +272,11 @@ def write_act(path: Path, act: Act) -> None:
     ]
     for i, (label, value) in enumerate(items, 5):
         kb3.cell(i, 1, label)
-        kb3.cell(i, 2, float(value)).number_format = NUM
+        kb3.cell(i, 2, _num(value)).number_format = NUM
     kb3.column_dimensions["A"].width = 50
     kb3.column_dimensions["B"].width = 18
     wb.save(path)
+    return used
 
 
 # ---------------------------------------------------------------- scenarios
@@ -254,10 +289,12 @@ def find(rows, code):
 
 
 def scenarios(prev_cum: Decimal):
-    """Повертає список (name, description, Act, expected_findings).
+    """Повертає список (name, description, Act, expected_findings[, extras]).
 
     expected_findings — лише перевірки зі статусом, відмінним від pass.
     Порожній список = акт має пройти всі перевірки.
+    extras (необов'язково): {"write": kwargs для write_act, "layout": True — записати layout,
+    "expected_error": {kind, label}, "previous_acts": [...] — інший набір попередніх актів}.
     """
     out = []
 
@@ -369,6 +406,42 @@ def scenarios(prev_cum: Decimal):
                     {"code": "2-1", "check": "C05_within_remaining_volume", "status": "fail"},
                     {"code": None, "check": "C10_kb3_matches_kb2v", "status": "fail"},
                 ]))
+
+    # 15–18. Інша розкладка КБ-2в (AC-07, AC-08, AC-09): підписи шукаються, а не беруться з README-рядків
+    out.append(("shifted_header", "Той самий правильний акт, що ok_many, але заголовок таблиці на 3 рядки нижче (рядок 11). Усі перевірки pass.",
+                base_act3(prev_cum), [], {"write": {"header_shift": 3}, "layout": True}))
+    out.append(("totals_gap", "Правильний акт, що ok_many, але між останньою позицією і «Разом без ПДВ» порожній рядок і примітка без шифру. Вони не позиції.",
+                base_act3(prev_cum), [],
+                {"write": {"gap": (None, "Примітка: обсяги підтверджено журналом робіт")}, "layout": True}))
+    out.append(("missing_label", "У КБ-2в немає рядка «Разом без ПДВ». Помилка вхідних даних (код 3), вердикту немає.",
+                base_act3(prev_cum), [],
+                {"write": {"omit_label": "Разом без ПДВ"},
+                 "expected_error": {"kind": "missing_label", "label": "Разом без ПДВ"}}))
+    act = base_act3(prev_cum)
+    out.append(("ambiguous_label", "Під «Всього з ПДВ» ще один рядок, що починається з «ПДВ». Два кандидати на підпис «ПДВ» — помилка вхідних даних, а не «перший збіг».",
+                act, [],
+                {"write": {"extra_label": ("ПДВ (довідково), грн", act.vat)},
+                 "expected_error": {"kind": "ambiguous_label", "label": "ПДВ"}}))
+
+    # 19–21. Бракує даних (AC-05, AC-11): unknown, ніколи не pass
+    act = base_act3(prev_cum)
+    find(act.rows, "2-4").qty = None  # ціна й вартість лишились
+    out.append(("empty_quantity", "Позиція 2-4: клітинка кількості порожня, ціна й вартість заповнені. C04 і C05 не перевіряються, C11 unknown.",
+                act, [{"code": "2-4", "check": "C11_required_values_present", "status": "unknown"}]))
+
+    act = base_act3(prev_cum)
+    find(act.rows, "3-3").amount = None
+    act = finalize(3, act.period, act.rows, prev_cum)  # підсумки = Σ заповнених вартостей
+    out.append(("empty_amount", "Позиція 3-3: клітинка вартості порожня. C04 не перевіряється, C11 unknown, C07 unknown (бракує вартості 3-3), хоч «Разом» = Σ заповнених.",
+                act, [{"code": "3-3", "check": "C11_required_values_present", "status": "unknown"},
+                      {"code": None, "check": "C07_subtotal", "status": "unknown"}]))
+
+    act = base_act3(prev_cum)
+    out.append(("incomplete_previous", "Акт №3, але з попередніх подано лише акт №1 (1 з 2). C05 усіх позицій і C13 unknown; решта перевірок pass.",
+                act,
+                [{"code": r.code, "check": "C05_within_remaining_volume", "status": "unknown"} for r in act.rows]
+                + [{"code": None, "check": "C13_kb3_cumulative", "status": "unknown"}],
+                {"previous_acts": ["data/synthetic/act_01_2026-09.xlsx"]}))
     return out
 
 
@@ -388,29 +461,36 @@ def main() -> None:
     write_act(DATA / "act_03_2026-11.xlsx", base_act3(prev_cum))
 
     index = []
-    for name, desc, act, findings in scenarios(prev_cum):
+    for name, desc, act, findings, *rest in scenarios(prev_cum):
+        extras = rest[0] if rest else {}
         d = FIXTURES / name
         d.mkdir()
-        write_act(d / "act_03.xlsx", act)
+        used = write_act(d / "act_03.xlsx", act, **extras.get("write", {}))
         expected = {
             "scenario": name,
             "description": desc,
             "inputs": {
                 "contract": "data/synthetic/contract_boq.xlsx",
-                "previous_acts": ["data/synthetic/act_01_2026-09.xlsx",
-                                  "data/synthetic/act_02_2026-10.xlsx"],
+                "previous_acts": extras.get("previous_acts", ["data/synthetic/act_01_2026-09.xlsx",
+                                                              "data/synthetic/act_02_2026-10.xlsx"]),
                 "act": f"tests/fixtures/{name}/act_03.xlsx",
             },
-            "expected_verdict": (
+        }
+        if extras.get("layout"):
+            expected["layout"] = {"act": used}
+        if "expected_error" in extras:
+            expected["expected_error"] = extras["expected_error"]
+        else:
+            expected["expected_verdict"] = (
                 "pass" if not findings
                 else "fail" if any(f["status"] == "fail" for f in findings)
                 else "needs_review"
-            ),
-            "expected_findings": findings,
-        }
+            )
+            expected["expected_findings"] = findings
         (d / "expected.json").write_text(json.dumps(expected, ensure_ascii=False, indent=2) + "\n",
                                          encoding="utf-8")
-        index.append((name, expected["expected_verdict"], len(findings)))
+        verdict = expected.get("expected_verdict") or "error:" + expected["expected_error"]["kind"]
+        index.append((name, verdict, len(findings)))
 
     print("data/synthetic:", ", ".join(sorted(p.name for p in DATA.glob("*.xlsx"))))
     for name, verdict, n in index:

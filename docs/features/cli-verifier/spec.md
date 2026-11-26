@@ -228,3 +228,101 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 - [ ] What layout do the employer's real acts use? Default now: the README layout plus prefix-normalized labels. — owner: AlexanderSW, due: when the first real act arrives
 - [ ] Update docs/checks.md with the rules fixed in this spec (C07 unknown on an empty amount, C05 not checked on an empty quantity, C05/C13 unknown on incomplete previous acts, read-vs-computed operands of C08–C13, missing or ambiguous layout label = input error, refusal to overwrite an input, and from clarify: empty printed totals → unknown of the checks using them, empty quantity in a previous act → C05 unknown — these two rules have no generator scenario in stage 1)? Default now: this spec is the source until then. — owner: AlexanderSW, due: before sdd:tasks
 - [ ] Update the expected pre-implementation test state in CLAUDE.md («16 passed, 14 xfailed») once new scenarios exist? Default now: update in the same commit as the generator change, with the reason. — owner: AlexanderSW, due: before sdd:implement
+
+## Test plan
+
+> Inline test plan (size S, route quick). Surface: `cli` (sad.md `target_surfaces`), so no UI tiers apply. It is written before the tests exist. `implement` reads the Level column as decided and does not re-decide it.
+
+### Levels
+
+| Level | Scope in this feature | Strategy |
+|---|---|---|
+| unit | One rule with no file I/O: label normalization and matching, one check (C01–C13) with its skip and unknown rules, previous-acts completeness, evidence-block rendering, journal-line escaping, option parsing and the overwrite guard. | In-memory models and small in-memory worksheets. No xlsx file is read from disk. |
+| integration | The core (`load_contract`, `load_act`, `verify`, report building) against the real dependency it owns: workbook files on disk. | Reference fixtures produced by the fixture generator are read in place, read-only. Nothing is stubbed. |
+| e2e | The command's real entry point, run the way a preparing agent runs it: arguments, then reading, checks, report files, outcome code. | Reference fixtures as inputs. The report and journal go to a per-test temporary folder. |
+| contract | The command's public interface in `contracts/cli.md` and the reference-file schema (`expected.json`, with the new optional `expected_error` and `layout` fields). | Assert the real behaviour against the agreed document. No hand-written stand-ins. |
+
+### AC coverage
+
+| AC (spec.md §5) | Test name (intent-based) | Level | Expected outcome |
+|---|---|---|---|
+| AC-01 happy path | every check passes on a consistent act | unit | each check returns pass for a position and an act that agree with the contract and previous acts |
+| AC-01 happy path | ok_many scenario yields pass with every check listed | integration | verdict pass, no non-pass findings, every check of every position and of the act is present in the findings |
+| AC-01 happy path | command on ok_many exits with the pass code and writes a report | e2e | outcome code 0, both report files exist, the report ends with the evidence block |
+| AC-02 multiple discrepancies | price, volume and КБ-3 discrepancies are each detected | unit | C03, C05 and C10 each return fail with the expected and actual values |
+| AC-02 multiple discrepancies | combo_three_errors reports all three findings without stopping | integration | exactly the three expected fail findings, each with expected and actual value; verdict fail |
+| AC-02 multiple discrepancies | command on combo_three_errors exits with the fail code | e2e | outcome code 1, report lists all three findings |
+| AC-03 evidence block | evidence block renders all five parts from the report model | unit | block is last; it states the counts of positions and checks, the not-checked list with position and reason, file, sheet and rows per group of numbers taken from provenance, counts by status, and the verdict |
+| AC-03 evidence block | evidence block cites the rows actually read from the fixture | integration | for ok_many and missing_price the cited files, sheets and rows equal the rows the loader read; missing_price lists its skipped checks with the reason |
+| AC-03 evidence block | two runs on the same inputs give identical findings and evidence | e2e | findings and evidence block are identical across two runs into two separate folders |
+| AC-04 missing price | empty price makes C11 unknown and skips C03 and C04 | unit | C11 unknown; C03 and C04 are not findings but appear as not checked with the reason «empty price»; no price is substituted |
+| AC-04 missing price | missing_price scenario yields needs_review | integration | findings match the reference exactly; verdict needs_review |
+| AC-04 missing price | command on missing_price exits with the needs_review code | e2e | outcome code 2, the evidence block lists the skipped checks for that position |
+| AC-05 missing-value suppression | each empty value suppresses exactly its dependent checks | unit | empty quantity skips C04 and C05; empty price skips C03 and C04; empty amount skips C04 and makes C07 unknown, naming the position; C11 unknown in all three cases; the verdict is never pass |
+| AC-05 missing-value suppression | formula cell without a stored value is read as empty | integration | a formula cell with no cached value loads as empty, never as zero or an evaluated value |
+| AC-05 missing-value suppression | empty-quantity and empty-amount scenarios match their reference | integration | findings and verdict match the reference exactly; verdict needs_review |
+| AC-05 missing-value suppression | command on the empty-value scenarios exits with the needs_review code | e2e | outcome code 2 for both scenarios |
+| AC-07 missing layout label | absent label raises a missing-label input error | unit | no matching row or sheet → input error of kind missing label, naming the label, file and sheet |
+| AC-07 missing layout label | label with an empty value cell is missing data, not an input error | unit | the checks that use the value are unknown; no input error |
+| AC-07 missing layout label | missing-label scenario raises the expected error | integration | input error kind and label equal `expected_error` in the reference file |
+| AC-07 missing layout label | command on the missing-label scenario exits with the input-error code and writes nothing | e2e | outcome code 3, message names the label, file and sheet, no report file in the output folder |
+| AC-08 ambiguous layout | label matching several rows raises an ambiguous-label error | unit | input error of kind ambiguous label, naming the label and every competing row; the first match is never used |
+| AC-08 ambiguous layout | ambiguous-label scenario raises the expected error | integration | input error kind and label equal `expected_error` in the reference file |
+| AC-08 ambiguous layout | command on the ambiguous-label scenario exits with the input-error code | e2e | outcome code 3, message names the competing rows, no report file |
+| AC-09 shifted layout | labels are found by normalized prefix wherever they sit | unit | the header and totals rows are found when shifted; empty rows and rows without a position code before «Разом без ПДВ» are not positions |
+| AC-09 shifted layout | shifted scenarios give the same verdict as the README layout | integration | findings and verdict equal those of the equivalent README-layout scenario; rows cited in the evidence block equal the reference `layout` rows, including skipped rows |
+| AC-09 shifted layout | command on the shifted scenarios exits with the same code as the README layout | e2e | same outcome code as the equivalent scenario |
+| AC-10 remaining volume | quantity above the remaining volume fails C05 | unit | C05 fail; expected = contracted minus the sum over previous acts, actual = act quantity; contract and each previous act cited as sources |
+| AC-10 remaining volume | volume_overrun scenario reports the overrun | integration | findings match the reference exactly; C05 cites the contract and both previous acts |
+| AC-10 remaining volume | command on volume_overrun exits with the fail code | e2e | outcome code 1 |
+| AC-11 incomplete previous acts | each completeness defect makes C05 and C13 unknown with its own reason | unit | one case per reason: «previous acts supplied: K of N−1» (fewer files including none, K counting distinct numbers in 1…N−1), «act number not readable», «previous act number not readable» naming the file, «duplicate previous act number M», «previous act number M outside 1…N−1» (including N itself); all other checks still run; verdict at best needs_review |
+| AC-11 incomplete previous acts | incomplete-previous-acts scenario matches its reference | integration | findings and verdict match the reference exactly; verdict needs_review |
+| AC-11 incomplete previous acts | command on incomplete previous acts exits with the needs_review code | e2e | outcome code 2, never 0 |
+| AC-12 КБ-3 vs КБ-2в | totals checks compare against printed values | unit | C10 fail when КБ-3 «Всього за звітний період» differs from the printed «Всього з ПДВ»; C13 pass when the cumulative equals the printed previous totals plus the current one; no recomputed operand is used |
+| AC-12 КБ-3 vs КБ-2в | kb3_mismatch scenario fails only C10 | integration | only C10 fails; C13 passes |
+| AC-12 КБ-3 vs КБ-2в | command on kb3_mismatch exits with the fail code | e2e | outcome code 1 |
+| AC-16 empty act | act with no positions warns C12 | unit | C12 warning; verdict needs_review |
+| AC-16 empty act | empty_act scenario yields needs_review | integration | findings and verdict match the reference exactly |
+| AC-16 empty act | command on empty_act exits with the needs_review code | e2e | outcome code 2, never 0 |
+| AC-06 invocation error | missing required input or unknown option is an input error | unit | no contract price → input error naming that input; no current act → the same; an unknown option → input error naming the option; no previous acts → not an error; option parsing never exits on its own with the needs_review code |
+| AC-06 invocation error | command with a missing input or unknown option exits with the input-error code | e2e | outcome code 3, a plain-language explanation, no report file, no verdict |
+| AC-06 invocation error | options and outcome codes match the published command contract | contract | every option documented in `contracts/cli.md` §2 is accepted with its documented meaning; outcome codes 0, 1, 2 and 3 mean what §3 says |
+| AC-13 inputs never modified | output path equal to an input is refused | unit | equal fully resolved paths are refused, including relative vs absolute spelling and letter-case differences; different files are allowed |
+| AC-13 inputs never modified | inputs are byte-for-byte unchanged after a run, and an overwriting run is refused | e2e | input copies have the same hashes before and after a normal run; a run whose report or journal points at an input exits with outcome code 3, says the verifier never writes to its inputs, and writes nothing |
+| AC-14 opt-in journal | journal lines are complete and injection-safe | unit | a new file gets the header line; an existing file is appended without a second header; one line per fail, unknown or warning and none for pass; the finder is the verifier and the resolution is empty; text starting with «=», «+», «-» or «@» gets a leading apostrophe; numbers are written exactly as read |
+| AC-14 opt-in journal | command writes the journal only on request, in all three modes | e2e | without the option the default journal is unchanged; with the option alone the lines go to `journal/agent_errors.csv` under the temporary working directory; with a location the file is created there with its header |
+| AC-15 reference scenarios | every reference scenario passes at the core level | integration | the expected-failure marker is removed; each of the 21 scenarios matches its findings and verdict exactly, or its expected error kind and label; shifted-layout scenarios cite the reference `layout` rows |
+| AC-15 reference scenarios | every reference scenario exits with its outcome code through the command | e2e | outcome code 0, 1, 2 or 3 as the reference implies; codes 0–2 write a report ending with the evidence block; code 3 writes no report; pointing the report location at an input exits with code 3 |
+| AC-15 reference scenarios | reference-file schema accepts the extended fields and the fixtures stay consistent | contract | the fixture-integrity suite is green; the schema accepts the optional `expected_error` (kind missing label or ambiguous label, plus the label) and `layout`; when `expected_error` is present, the verdict and findings are absent |
+
+### Edge cases / error paths
+
+Each error or authorization AC (AC-06, AC-07, AC-08, AC-13) has its own rows above. The boundary and failure cases the spec implies are listed below. Each one becomes its own test row at the level shown.
+
+- File that is not a readable workbook, given as the contract or the act (unit + e2e) → input error, outcome code 3, no partial report.
+- Input path that does not exist (unit + e2e) → input error naming the missing file, outcome code 3, no report.
+- Label present but its value cell empty, for a printed total (e.g. «Разом без ПДВ» or a КБ-3 value) (unit) → every check that uses that value is unknown; not an input error; the verdict is at best needs_review.
+- Empty quantity of a position in a previous act (unit) → C05 for that position is unknown. Stage 1 has no generator scenario for it (spec §8).
+- Missing or unreadable current act number (unit) → missing data per AC-11, not a missing-label input error.
+- Difference exactly at the ±0.01 UAH tolerance in C04 and C07–C10, C13, and just above it (unit) → at the tolerance: pass; above it: fail.
+- Only the КБ-3 sheet is missing, or only the КБ-2в sheet (unit) → missing-label input error naming that sheet.
+- Prefix collision during normalization: «ПДВ» also matching «ПДВ 20%» on the same sheet, where it must stay unique (unit) → resolves to exactly one row, or is an ambiguous-label error. Never the first match.
+- Journal location equal to an input, spelled with a different letter case (unit + e2e) → refused before any write, outcome code 3.
+- Money and quantities stay exact decimals (unit) → every loaded and computed money or quantity value is a decimal, never a floating-point number.
+
+### Test data
+
+- **Seed strategy.** Reference scenarios under `tests/fixtures/<scenario>/` (xlsx plus `expected.json`) and `data/synthetic/`, all produced only by `scripts/generate_fixtures.py`. The seven new scenarios are added there as well (tasks T2, T3). Fixtures and `expected.json` are never edited by hand. Unit tests build `Position`, `Act`, `Contract` and `Report` objects in memory, plus small in-memory worksheets for the layout helper, following the shapes in `data-model.md`.
+- **Integration dependency.** Real workbook files on disk, read through the real loaders. There is no database, cache or queue in this feature, so no throwaway container is needed. Nothing is stubbed in front of the workbook reader.
+- **Cleanup boundary.** Per test. Each e2e test writes reports and journals into its own temporary folder and runs from a temporary working directory, so it never touches the tracked `journal/agent_errors.csv` (sad.md §11, risk 5). Tests that must exercise writing near inputs (AC-13) copy the inputs into the temporary folder first. The reference fixtures in the repository are never a write target. Integration tests read fixtures in place and write nothing.
+
+### NFR validation (load)
+
+- **Run time** (spec §6: ≤ 5 s wall-clock for «ok_many», 11 positions and 2 previous acts). Scenario: one sequential run of the command on «ok_many» (rate: 1 run, no concurrency; duration: a single run). Metric: wall-clock time from start to exit. Threshold: ≤ 5 s. Level: e2e, measured with the timer the suite already uses. No dedicated load tool is needed. If one is ever needed, use the load tool already in the repo, or e.g. k6 or Locust.
+- The other §6 rows carry numbers but are not about load. They are covered above: determinism (0 differences) → AC-03 e2e; input immutability (0 bytes changed) → AC-13 e2e; false pass (0 runs) → AC-04, AC-05, AC-11 and the AC-15 suite; money accuracy (±0.01 UAH, 0 floating-point operations) → the tolerance and decimal edge cases, plus code review.
+
+### CI placement
+
+- **On every change (local, before each commit):** unit, contract and integration. Integration reads files on disk only, so it is fast enough for every run.
+- **Also on every change:** e2e, including the run-time check, because the whole suite runs in seconds. If the suite grows, the run-time scenario is the first candidate to move to a pre-release run.
+- The repository has no CI pipeline yet. This split is advice. `implement` and the repository own the actual wiring.
