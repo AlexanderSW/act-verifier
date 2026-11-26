@@ -423,6 +423,54 @@
       "dod": "types match what the loader stores; the duplicate-code rule appears in both documents",
       "file": "docs/features/cli-verifier/tasks/t21-model-doc-drift.md",
       "status": "done"
+    },
+    {
+      "id": "T22",
+      "title": "Pin the empty contract quantity/price rule with tests",
+      "layer": "tests",
+      "deps": [],
+      "acs": [],
+      "files_hint": [
+        "tests/test_checks.py",
+        "tests/test_loaders.py"
+      ],
+      "dod": "tests fail against a mutated rule and pass against the real one",
+      "file": "docs/features/cli-verifier/tasks/t22-empty-contract-qty-price-tests.md",
+      "status": "todo"
+    },
+    {
+      "id": "T23",
+      "title": "Name a duplicated contract code as a code, with its own InputError kind",
+      "layer": "infra",
+      "deps": [],
+      "acs": [],
+      "files_hint": [
+        "src/act_verifier/models.py",
+        "src/act_verifier/loaders.py",
+        "src/act_verifier/cli.py",
+        "tests/test_models.py",
+        "tests/test_loaders.py",
+        "tests/test_cli_unit.py",
+        "docs/features/cli-verifier/data-model.md",
+        "docs/features/cli-verifier/contracts/cli.md",
+        "docs/features/cli-verifier/adr/0002-signal-input-errors-with-typed-exception.md"
+      ],
+      "dod": "the command prints the code-wording message, exits 3, writes no report",
+      "file": "docs/features/cli-verifier/tasks/t23-duplicate-code-message.md",
+      "status": "todo"
+    },
+    {
+      "id": "T24",
+      "title": "List Act.sheet in data-model.md",
+      "layer": "docs",
+      "deps": [],
+      "acs": [],
+      "files_hint": [
+        "docs/features/cli-verifier/data-model.md"
+      ],
+      "dod": "the Act table matches models.py",
+      "file": "docs/features/cli-verifier/tasks/t24-act-sheet-in-data-model.md",
+      "status": "todo"
     }
   ]
 }
