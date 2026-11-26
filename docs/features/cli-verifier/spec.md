@@ -31,6 +31,17 @@ Traceability and decisions taken in this specify run (owner, 2026-11-26), on top
 - Journal escaping applies only to text fields that are not numbers (e.g. a position code beginning with «=», «+», «-», «@»); numbers in the expected/actual columns are written exactly as read.
 - Scope extension over brief §7 («2–3 new layout fixtures»): seven new generator scenarios — shifted header, totals not right after the table, missing label, ambiguous label, empty quantity, empty amount, incomplete previous acts — so that every AC is backed by a generator scenario rather than ad-hoc temporary files (the approach the brief rejected).
 
+Decisions taken in the clarify run (owner, 2026-11-26):
+- Act number N (current and previous acts) is read only from the КБ-2в title cell whose normalized text begins with «Акт №»; the file name and the КБ-3 «до акта №» text are not used. A missing or non-numeric act number is missing data (→ `unknown` of C05/C13), never an input error.
+- Required inputs are the contract price and the current act; previous acts are optional (act 1 has none). Too few previous acts goes the AC-11 path, not the invocation-error path.
+- Each run that reaches a verdict writes the report into the output folder (option, default `reports/`) as two files — an Excel workbook with the sheet «Перевірки» (code · check · status · expected · actual · source) and a Markdown file with the findings and the evidence block — and also prints the evidence block to the console. Report text is in Ukrainian; reasons quoted in English in this spec describe the content, not the literal wording (e.g. «empty price» = «порожня ціна»).
+- КБ-2в table: from the header row down to the first «Разом без ПДВ» row below it. A position is a row with a non-empty position code; fully empty rows and rows without a code (e.g. a note) are skipped and counted in the evidence block as «skipped rows without a code». Totals labels are searched only below the header row.
+- Value cells: a КБ-2в totals value is the cell in the «Вартість» header column on the label's row; a КБ-3 value is the cell immediately to the right of the label. The four КБ-3 label prefixes, all mandatory: «Вартість робіт за звітний період», «ПДВ», «Всього за звітний період», «З початку виконання робіт».
+- An empty printed total makes `unknown` every check that uses it, naming the value: «Разом без ПДВ» → C07, C08, C09; «ПДВ» → C08, C09; «Всього з ПДВ» → C09, C10, C13; КБ-3 period total → C10; КБ-3 cumulative total → C13; a previous act's «Всього з ПДВ» → C13.
+- Previous acts: an empty quantity of a position in a previous act makes C05 of that position `unknown`; a position code repeated within one previous act is summed (C06 applies to the current act only).
+- «Coincides with an input file» means the fully resolved absolute paths are equal, compared case-insensitively (Windows).
+- Journal: the default location is `journal/agent_errors.csv` relative to the current working directory; a chosen location that does not exist is created with the existing header line; escaping is a leading apostrophe.
+
 Derived from the fixtures, not an owner decision (source-verified: `scripts/generate_fixtures.py` scenarios subtotal_mismatch, vat_error, kb3_mismatch, combo_three_errors):
 - Totals checks compare against the values printed in the act: C08 uses the printed «Разом без ПДВ», C09 the printed subtotal and VAT, C10 the printed КБ-2в «Всього з ПДВ», C13 Σ printed КБ-2в «Всього з ПДВ» of previous acts + the current КБ-2в «Всього з ПДВ».
 
@@ -119,15 +130,15 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 
 ### AC-06 (US-03) — error (invocation error)
 
-**Given** a preparing agent invokes the verifier without a required input or with an option the verifier does not know
+**Given** a preparing agent invokes the verifier without a required input (the contract price or the current act; previous acts are optional) or with an option the verifier does not know
 **When** the verifier starts
 **Then** it stops with outcome code 3, explains in plain language which input is missing or which option is unknown, and produces no report and no verdict — the code is never the needs_review code
 
 ### AC-07 (US-04) — error (missing layout label)
 
-**Given** an input file in which a layout label cannot be found — for the contract price: the sheet «Договірна ціна» and the header columns «Шифр», «Найменування», «Од. виміру», «Кількість», «Ціна», «Вартість»; for the current act: the sheets «КБ-2в» and «КБ-3», the same header columns, «Разом без ПДВ», «ПДВ», «Всього з ПДВ» and the four КБ-3 labels; for a previous act: the sheet «КБ-2в», its header columns, «Всього з ПДВ» and the act number (new reference scenario with a missing label)
+**Given** an input file in which a layout label cannot be found — for the contract price: the sheet «Договірна ціна» and the header columns «Шифр», «Найменування», «Од. виміру», «Кількість», «Ціна», «Вартість»; for the current act: the sheets «КБ-2в» and «КБ-3», the same header columns, «Разом без ПДВ», «ПДВ», «Всього з ПДВ» and the four КБ-3 labels («Вартість робіт за звітний період», «ПДВ», «Всього за звітний період», «З початку виконання робіт»); for a previous act: the sheet «КБ-2в», its header columns and «Всього з ПДВ» (new reference scenario with a missing label)
 **When** the employer reviewer runs the verifier
-**Then** it stops with outcome code 3 and a message that names the missing label, the file and the sheet, and produces no verdict; a label that is present but whose value cell is empty is not this case — it is missing data and yields unknown
+**Then** it stops with outcome code 3 and a message that names the missing label, the file and the sheet, and produces no verdict; a label that is present but whose value cell is empty is not this case — it is missing data and yields unknown for every check that uses that value; a missing or unreadable act number is likewise missing data (AC-11), not this case
 
 ### AC-08 (US-04) — error (ambiguous layout)
 
@@ -137,9 +148,9 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 
 ### AC-09 (US-04) — happy path (shifted layout)
 
-**Given** an act whose header row sits in a different row than the README describes, or whose totals rows do not follow the table immediately (new reference scenarios), but whose labels match after normalization by prefix
+**Given** an act whose header row sits in a different row than the README describes, or whose totals rows do not follow the table immediately (new reference scenarios), but whose labels match after normalization by prefix — including empty rows or rows without a position code (e.g. a note) between the last position and «Разом без ПДВ»
 **When** the employer reviewer runs the verifier
-**Then** the verifier produces the same verdict and findings as for the equivalent act in the README layout, and the evidence block cites the rows where the data was actually found
+**Then** the verifier produces the same verdict and findings as for the equivalent act in the README layout, rows without a position code are not treated as positions, and the evidence block cites the rows where the data was actually found and the rows it skipped
 
 ### AC-10 (US-01) — cross-context (remaining volume from previous acts)
 
@@ -149,9 +160,9 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 
 ### AC-11 (US-03) — cross-context (incomplete previous acts)
 
-**Given** a current act numbered N and a set of previous acts that is not exactly acts 1…N−1 (fewer files, a duplicate number, or the act number cannot be read) (new reference scenario with incomplete previous acts)
+**Given** a current act numbered N and a set of previous acts that is not exactly acts 1…N−1 (fewer files including none, a duplicate number, a number outside 1…N−1 including N itself, or an act number that cannot be read) (new reference scenario with incomplete previous acts)
 **When** the preparing agent runs the verifier
-**Then** the remaining-volume check of every position and the cumulative КБ-3 check are unknown with the reason «previous acts supplied: K of N−1» (or «act number not readable» when N is unknown, or «duplicate previous act number M» when numbers repeat), all other checks still run, and the verdict is at best needs_review with outcome code 2 — never pass
+**Then** the remaining-volume check of every position and the cumulative КБ-3 check are unknown with the reason «previous acts supplied: K of N−1», where K counts distinct act numbers within 1…N−1 (or «act number not readable» when the current act's N is unknown, «previous act number not readable» naming the file, «duplicate previous act number M», or «previous act number M outside 1…N−1»), all other checks still run, and the verdict is at best needs_review with outcome code 2 — never pass
 
 ### AC-12 (US-01) — cross-context (КБ-3 against КБ-2в)
 
@@ -161,7 +172,7 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 
 ### AC-13 (US-01) — authorization (inputs are never modified)
 
-**Given** a project owner runs the verifier on any inputs, including a run where the report or journal location would coincide with one of the input files
+**Given** a project owner runs the verifier on any inputs, including a run where the report or journal location would coincide with one of the input files (fully resolved paths equal, compared case-insensitively)
 **When** the run finishes
 **Then** every input file is byte-for-byte unchanged; a run whose report or journal would overwrite an input is refused before anything is written, with outcome code 3 and an explanation that the verifier never writes to its inputs
 
@@ -169,13 +180,13 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 
 **Given** a project owner runs the verifier on an act with fail, unknown or warning findings
 **When** the run is made without the journal option, with the journal option alone, or with the journal option and a chosen journal location
-**Then** without the option the journal is left untouched; with the option alone one line per fail, unknown or warning finding is appended to the default journal; with a location the lines are appended there; every line names the verifier as the finder and leaves the resolution empty; a text field that is not a number and begins with «=», «+», «-» or «@» is escaped so it cannot become a formula, while numbers are written exactly as read
+**Then** without the option the journal is left untouched; with the option alone one line per fail, unknown or warning finding is appended to the default journal (`journal/agent_errors.csv` relative to the current working directory); with a location the lines are appended there, creating the file with the journal's header line if it does not exist; every line names the verifier as the finder and leaves the resolution empty; a text field that is not a number and begins with «=», «+», «-» or «@» is escaped with a leading apostrophe so it cannot become a formula, while numbers are written exactly as read
 
 ### AC-15 (US-06) — happy path (reference scenarios)
 
 **Given** the 14 existing reference scenarios plus the seven new generator scenarios (shifted header, totals not right after the table, missing label, ambiguous label, empty quantity, empty amount, incomplete previous acts), all produced by the fixture generator, and a command-level check that points the report location at an input file
 **When** the project owner runs the test suite
-**Then** every scenario passes rather than being marked as an expected failure: verdict scenarios match their expected findings and verdict exactly, the expected-input-error scenario matches its expected error kind and label, each scenario is also run through the command and matches its outcome code (0, 1, 2 or 3), scenarios with outcome code 0, 1 or 2 also produce the evidence block while outcome code 3 produces no report, and the fixture-integrity suite stays green with its reference-file schema extended to accept the new optional expected-error field
+**Then** every scenario passes rather than being marked as an expected failure: verdict scenarios match their expected findings and verdict exactly, the expected-input-error scenarios match their expected error kind (missing label or ambiguous label) and the label as written in this spec (e.g. «Разом без ПДВ»), while other input errors (unreadable workbook, invocation error, overwrite refusal) are checked by outcome code only, each scenario is also run through the command and matches its outcome code (0, 1, 2 or 3), scenarios with outcome code 0, 1 or 2 also produce the evidence block while outcome code 3 produces no report, and the fixture-integrity suite stays green with its reference-file schema extended to accept the new optional expected-error field
 
 ### AC-16 (US-01) — domain invariant (empty act)
 
@@ -215,5 +226,5 @@ Derived from the fixtures, not an owner decision (source-verified: `scripts/gene
 ## 8. Open questions
 
 - [ ] What layout do the employer's real acts use? Default now: the README layout plus prefix-normalized labels. — owner: AlexanderSW, due: when the first real act arrives
-- [ ] Update docs/checks.md with the rules fixed in this spec (C07 unknown on an empty amount, C05 not checked on an empty quantity, C05/C13 unknown on incomplete previous acts, read-vs-computed operands of C08–C13, missing or ambiguous layout label = input error, refusal to overwrite an input)? Default now: this spec is the source until then. — owner: AlexanderSW, due: before sdd:tasks
+- [ ] Update docs/checks.md with the rules fixed in this spec (C07 unknown on an empty amount, C05 not checked on an empty quantity, C05/C13 unknown on incomplete previous acts, read-vs-computed operands of C08–C13, missing or ambiguous layout label = input error, refusal to overwrite an input, and from clarify: empty printed totals → unknown of the checks using them, empty quantity in a previous act → C05 unknown — these two rules have no generator scenario in stage 1)? Default now: this spec is the source until then. — owner: AlexanderSW, due: before sdd:tasks
 - [ ] Update the expected pre-implementation test state in CLAUDE.md («16 passed, 14 xfailed») once new scenarios exist? Default now: update in the same commit as the generator change, with the reason. — owner: AlexanderSW, due: before sdd:implement
