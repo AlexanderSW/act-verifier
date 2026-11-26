@@ -10,6 +10,7 @@ updated_at: "2026-11-26"
 - accepting person — the human who reads a verification report and decides whether to accept the act. NOT the verifier (which only reports, never decides).
 - act — a completed-works acceptance act (form КБ-2в) for one reporting period, holding position rows and the totals «Разом без ПДВ», «ПДВ 20%», «Всього з ПДВ», plus its КБ-3 certificate sheet. NOT the contract price (the agreed baseline the act is checked against).
 - check — one rule from the catalog in docs/checks.md, identified by a stable ID (C01–C13). NOT a finding (the result of applying a check to one row or act).
+- check-act skill — the written instructions the L1 agent follows: red lines, steps, outcome-code map and reply format. NOT the verifier's contract (which the skill must agree with).
 - contract price — the agreed bill of quantities («Договірна ціна») listing each position code with unit, contracted quantity and unit price. NOT an act (which reports work done in one period).
 - employer reviewer — a person at a prospective employer who examines the project and may run it on real acts in a test assignment. NOT the project owner.
 - error journal — the shared log of fail/unknown/warning findings (journal/agent_errors.csv), appended only on explicit request. NOT the verification report (produced on every run).
@@ -17,6 +18,7 @@ updated_at: "2026-11-26"
 - finding — the outcome of one check for one position code or for the whole act, with a status and, on fail, the expected and actual values. NOT a check (the rule itself).
 - input error — the outcome where verification did not happen: the invocation was wrong, an input file, sheet or layout label could not be read or was ambiguous, or the run would have overwritten an input. NOT the `unknown` status (verification happened but a value was empty).
 - КБ-3 certificate — the cost certificate sheet of an act with the period total and the cumulative total since works began. NOT the КБ-2в totals (which it must agree with).
+- L1 agent — the assistant agent that runs the verifier at a person's request, reads its report and explains the verdict, findings and evidence block in plain language; it never computes numbers, edits inputs or decides acceptance. NOT the preparing agent (which prepares acts) and NOT the verifier (which checks).
 - layout label — the text in a cell that marks a structural place in a file: a header column («Шифр», «Кількість») or a totals row. NOT a value (the number next to the label).
 - position code — the identifier («шифр», e.g. «2-1») linking an act row to a contract price row. NOT the row number («№ з/п»).
 - preparing agent — the AI agent or person who prepares an act before it is verified. NOT the verifier.
