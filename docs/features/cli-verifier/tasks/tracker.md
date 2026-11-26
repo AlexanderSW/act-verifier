@@ -29,7 +29,7 @@
 | T19 | Map the remaining argparse errors to Ukrainian messages naming the option | ports | AlexanderSW | S | T16 | done | COMMIT |
 | T20 | Assert expected and actual values of the three combo fails | tests | AlexanderSW | S | — | done | COMMIT |
 | T21 | Align ContractPosition types and record the duplicate-code rule | docs | AlexanderSW | S | T17 | done | COMMIT |
-| T22 | Pin the empty contract quantity/price rule with tests | tests | AlexanderSW | S | — | todo | — |
+| T22 | Pin the empty contract quantity/price rule with tests | tests | AlexanderSW | S | — | done | COMMIT |
 | T23 | Name a duplicated contract code as a code, with its own InputError kind | infra | AlexanderSW | S | — | todo | — |
 | T24 | List Act.sheet in data-model.md | docs | AlexanderSW | S | — | todo | — |
 

@@ -396,3 +396,36 @@ def test_verify_carries_skips_and_skipped_rows():
 def test_verify_is_deterministic():
     a = full_act()
     assert verify(a, CONTRACT, prev_with_totals()) == verify(a, CONTRACT, prev_with_totals())
+
+
+# ---------------------------------------------------------------- порожні кількість / ціна в договорі (review 2, finding 1)
+def contract_with(code, qty, price):
+    """CONTRACT, у якому позиція code має порожню (None) кількість чи ціну, як її читає load_contract."""
+    out = dict(CONTRACT)
+    p = out[code]
+    out[code] = ContractPosition(p.code, p.name, p.unit, None if qty is None else D(qty),
+                                 None if price is None else D(price), p.source)
+    return out
+
+
+def test_empty_contract_quantity_makes_c05_unknown_never_pass():
+    findings, skipped = run([row("2-1", "300", "485", "145500")], contract_=contract_with("2-1", None, "485"))
+    f = by(findings, "2-1", C05)
+    assert (f.status, f.message, f.expected) == (Status.UNKNOWN, "у договорі порожня кількість", None)
+    assert by(findings, "2-1", C03).status is Status.PASS  # ціна є — C03 перевіряється
+    assert skipped == []
+
+
+def test_empty_contract_price_makes_c03_unknown_never_pass():
+    findings, skipped = run([row("2-1", "300", "485", "145500")], contract_=contract_with("2-1", "1200", None))
+    f = by(findings, "2-1", C03)
+    assert (f.status, f.message, f.expected, f.actual) == (Status.UNKNOWN, "у договорі порожня ціна", None, "485")
+    assert by(findings, "2-1", C05).status is Status.PASS  # кількість є — залишок перевіряється
+    assert skipped == []
+
+
+@pytest.mark.parametrize("qty,price,check", [(None, "485", C05), ("1200", None, C03)])
+def test_empty_contract_value_gives_needs_review_verdict(qty, price, check):
+    rep = verify(full_act(), contract_with("2-1", qty, price), prev_with_totals())
+    assert [(f.check, f.status) for f in rep.findings if f.status is not Status.PASS] == [(check, Status.UNKNOWN)]
+    assert rep.verdict == "needs_review"

@@ -436,7 +436,7 @@
       ],
       "dod": "tests fail against a mutated rule and pass against the real one",
       "file": "docs/features/cli-verifier/tasks/t22-empty-contract-qty-price-tests.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T23",

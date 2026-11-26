@@ -301,3 +301,11 @@ def test_sheet_title_as_found_is_cited_everywhere(tmp_path):
     assert {sh for file, sh in sheets if file == "act.xlsx"} <= {"КБ-2в акт 2", "КБ-3"}
     assert not any(sh == "КБ-2в" for _, sh in sheets)
     assert report.skipped_rows == [("act.xlsx", "КБ-2в акт 2", [10])]
+
+
+def test_load_contract_empty_quantity_and_price_load_as_none_not_zero(tmp_path):
+    """Порожня клітинка договору — брак даних (None), не 0 і не помилка вхідних даних (review 2, finding 1)."""
+    path = _contract_file(tmp_path, HEADERS, [(1, "2-1", "A", "м²", None, 5, 50), (2, "2-2", "B", "м²", 3, None, 15)])
+    contract = load_contract(path)
+    assert (contract["2-1"].qty, contract["2-1"].price) == (None, Decimal("5"))
+    assert (contract["2-2"].qty, contract["2-2"].price) == (Decimal("3"), None)

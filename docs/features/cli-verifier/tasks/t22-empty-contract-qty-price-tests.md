@@ -9,8 +9,8 @@ files_hint: ["tests/test_checks.py", "tests/test_loaders.py"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T22 — Pin the empty contract quantity/price rule with tests
