@@ -124,7 +124,7 @@
         "tests/test_loaders.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t06-load-act.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T7",
