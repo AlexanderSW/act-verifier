@@ -1,0 +1,27 @@
+{
+  "scenario": "totals_gap",
+  "description": "Правильний акт, що ok_many, але між останньою позицією і «Разом без ПДВ» порожній рядок і примітка без шифру. Вони не позиції.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/totals_gap/act_03.xlsx"
+  },
+  "layout": {
+    "act": {
+      "header_row": 8,
+      "first_data_row": 9,
+      "skipped_rows": [
+        20,
+        21
+      ],
+      "subtotal_row": 22,
+      "vat_row": 23,
+      "total_row": 24
+    }
+  },
+  "expected_verdict": "pass",
+  "expected_findings": []
+}

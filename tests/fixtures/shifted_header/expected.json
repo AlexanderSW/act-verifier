@@ -1,0 +1,23 @@
+{
+  "scenario": "shifted_header",
+  "description": "Той самий правильний акт, що ok_many, але заголовок таблиці на 3 рядки нижче (рядок 11). Усі перевірки pass.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/shifted_header/act_03.xlsx"
+  },
+  "layout": {
+    "act": {
+      "header_row": 11,
+      "first_data_row": 12,
+      "subtotal_row": 23,
+      "vat_row": 24,
+      "total_row": 25
+    }
+  },
+  "expected_verdict": "pass",
+  "expected_findings": []
+}

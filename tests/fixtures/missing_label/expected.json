@@ -1,0 +1,16 @@
+{
+  "scenario": "missing_label",
+  "description": "У КБ-2в немає рядка «Разом без ПДВ». Помилка вхідних даних (код 3), вердикту немає.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/missing_label/act_03.xlsx"
+  },
+  "expected_error": {
+    "kind": "missing_label",
+    "label": "Разом без ПДВ"
+  }
+}
