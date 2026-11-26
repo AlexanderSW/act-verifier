@@ -9,7 +9,7 @@ files_hint: ["README.md", "docs/features/check-act-skill/SKILL.md"]
 owner: "AlexanderSW"
 estimate: "S"           # ~45 min
 context_budget: "S"     # 34 inlined lines, 1 extra file (README.md itself)
-status: "todo"
+status: "done"
 step: ""
 ---
 

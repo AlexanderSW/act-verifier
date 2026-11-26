@@ -76,7 +76,7 @@
       "dod": "README.md has the section «Агент L1: Skill check-act» (listed in «Зміст») saying how to call the skill from this repository, what the L1 agent does and the four things it does not do, and the draft docs/features/check-act-skill/SKILL.md carries a superseded note.",
       "files_hint": ["README.md", "docs/features/check-act-skill/SKILL.md"],
       "file": "docs/features/check-act-skill/tasks/T7-readme-section.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T8",

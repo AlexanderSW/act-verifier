@@ -15,6 +15,7 @@
 - [Формат вхідних файлів](#формат-вхідних-файлів)
 - [Перевірки](#перевірки)
 - [Сценарії (tests/fixtures)](#сценарії-testsfixtures)
+- [Агент L1: Skill check-act](#агент-l1-skill-check-act)
 - [Розробка](#розробка)
 - [Структура проєкту](#структура-проєкту)
 - [Документація](#документація)
@@ -212,6 +213,27 @@ date,act_file,code,check,status,expected,actual,found_by,resolution
 | missing_label | немає рядка «Разом без ПДВ» | код 3, `missing_label` |
 | ambiguous_label | два рядки, що починаються з «ПДВ» | код 3, `ambiguous_label` |
 
+## Агент L1: Skill check-act
+
+Ланка «агент» у ланцюжку «ШІ готує → код перевіряє → людина вирішує». Skill лежить у `.claude/skills/check-act/SKILL.md` і працює поруч з інструментом для агента (етап 2), а не замість нього.
+
+**Як викликати.** Відкрийте сесію Claude Code у корені цього репозиторію (skill підхоплюється з `.claude/skills/`). Викличте `/check-act` або просто попросіть перевірити акт, назвавши файли: договірну ціну, попередні акти й сам акт, наприклад:
+
+> Перевір акт `tests/fixtures/combo_three_errors/act_03.xlsx` — це акт 3. Договірна ціна — `data/synthetic/contract_boq.xlsx`, попередні акти — `data/synthetic/act_01_2026-09.xlsx` і `data/synthetic/act_02_2026-10.xlsx`.
+
+Поки skill активний, без запиту дозволу запускається лише `.venv/Scripts/act-verifier` (`allowed-tools`, [ADR-0002](docs/features/check-act-skill/adr/0002-pre-allow-only-the-verifier-via-skill-allowed-tools.md)); будь-яка інша команда чи правка файлу запитає дозвіл. Інструкція описує виклик лише з цього репозиторію, без кроків встановлення на іншій машині.
+
+**Що робить агент.** Питає про входи, яких людина не назвала, запускає верифікатор і пояснює його звіт у п'яти розділах: «Вердикт», «Знахідки», «Не перевірено», «Що зробити», «Звідки числа». Коли перевірки не було (код 3), каже про це й цитує повідомлення верифікатора.
+
+**Чого агент не робить:**
+
+- не рахує числа сам: усі числа беруться зі звіту верифікатора;
+- не відкриває й не змінює вхідні файли;
+- не вирішує, чи прийняти акт: рішення за людиною;
+- не пише в журнал помилок, якщо людина не попросила.
+
+Сценарій демо на трьох прикладах: [docs/features/check-act-skill/demo.md](docs/features/check-act-skill/demo.md).
+
 ## Розробка
 
 ### Тести
@@ -229,6 +251,7 @@ pytest -q
 | `test_cli.py`, `test_cli_unit.py` | CLI: коди виходу, звіти, журнал, захист вхідних файлів |
 | `test_loaders.py`, `test_layout.py` | читання xlsx, пошук підписів |
 | `test_checks.py`, `test_models.py`, `test_report.py` | перевірки, моделі, звіт і блок доказів |
+| `test_check_act_skill.py` | skill check-act узгоджений з верифікатором: коди виходу, параметри команди, токен «перевірки не було», заголовок skill |
 
 ### Генерація синтетичних даних
 
@@ -255,6 +278,7 @@ python scripts/generate_fixtures.py
 act-verifier/
 ├── CLAUDE.md                     # правила для Claude Code в цьому репо
 ├── CONTEXT.md                    # глосарій предметної області
+├── .claude/skills/check-act/     # skill агента L1 (SKILL.md)
 ├── pyproject.toml
 ├── data/synthetic/               # демо-набір для CLI
 │   ├── contract_boq.xlsx         # договірна ціна, 14 позицій
@@ -265,7 +289,8 @@ act-verifier/
 │   ├── checks.md                 # каталог перевірок C01–C13, статуси, блок доказів
 │   ├── roadmap.md                # кроки розвитку
 │   ├── architecture-map.md       # карта архітектури
-│   └── features/cli-verifier/    # spec, SAD, ADR, контракт CLI, задачі
+│   ├── features/cli-verifier/    # spec, SAD, ADR, контракт CLI, задачі
+│   └── features/check-act-skill/ # spec, SAD, ADR, задачі, сценарій демо
 ├── scripts/
 │   └── generate_fixtures.py      # генератор усіх синтетичних файлів
 ├── src/act_verifier/
@@ -288,6 +313,7 @@ act-verifier/
 - [docs/checks.md](docs/checks.md): каталог перевірок, правила пропуску, формат блоку доказів
 - [docs/features/cli-verifier/contracts/cli.md](docs/features/cli-verifier/contracts/cli.md): контракт CLI (параметри, коди, вихідні файли, що стабільне у v0.1)
 - [docs/features/cli-verifier/spec.md](docs/features/cli-verifier/spec.md), [sad.md](docs/features/cli-verifier/sad.md), [adr/](docs/features/cli-verifier/adr/): специфікація, архітектура, рішення
+- [docs/features/check-act-skill/spec.md](docs/features/check-act-skill/spec.md), [sad.md](docs/features/check-act-skill/sad.md), [adr/](docs/features/check-act-skill/adr/), [demo.md](docs/features/check-act-skill/demo.md): skill check-act агента L1
 - [CONTEXT.md](CONTEXT.md): глосарій термінів
 - [docs/roadmap.md](docs/roadmap.md): дорожня карта
 
