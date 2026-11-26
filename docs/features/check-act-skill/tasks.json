@@ -43,7 +43,7 @@
       "dod": "Each of AC-01, AC-02, AC-02b, AC-03, AC-07 maps to a named sentence in SKILL.md «Червоні лінії» / «Формат відповіді» with the five fixed headings in order, and the suite stays at 304 + N passed, 0 failed, 0 xfailed.",
       "files_hint": [".claude/skills/check-act/SKILL.md"],
       "file": "docs/features/check-act-skill/tasks/T4-skill-reply-format.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T5",

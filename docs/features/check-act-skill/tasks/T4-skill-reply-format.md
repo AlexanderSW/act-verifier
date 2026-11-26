@@ -9,7 +9,7 @@ files_hint: [".claude/skills/check-act/SKILL.md"]
 owner: "AlexanderSW"
 estimate: "M"           # ~2 h
 context_budget: "M"     # 54 inlined lines, 1 extra file (a sample report from reports/ to see the wording)
-status: "todo"
+status: "done"
 step: ""
 ---
 
