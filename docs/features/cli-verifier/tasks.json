@@ -489,7 +489,7 @@
       ],
       "dod": "every missing-data unknown has a Skipped with the same reason; tests green",
       "file": "docs/features/cli-verifier/tasks/t25-skip-reason-for-missing-data.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T26",

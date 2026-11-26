@@ -216,6 +216,8 @@ Frozen dataclass (value object). Shared by every aggregate — the evidence bloc
 | `code` | `str \| None` | position code; `None` = act level | |
 | `reason` | `str` | required | e.g. «порожня ціна», «previous acts supplied: K of N−1» (AC-04, AC-11) |
 
+Every `Finding` with status `unknown` caused by missing data (all except C11, which is itself the presence check) has a `Skipped` with the same check, code and reason (= the finding's message), so the evidence block lists it (AC-03).
+
 **Aggregate root:** `Report`.
 
 ### `JournalLine` (CSV row)

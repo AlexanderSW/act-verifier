@@ -131,3 +131,7 @@ def test_empty_amount_c07_names_the_position():
     report = run_scenario("empty_amount")
     f = next(f for f in report.findings if f.check == "C07_subtotal")
     assert f.status is Status.UNKNOWN and "3-3" in f.message
+    # AC-03, AC-05: C07 стоїть у «Не перевірено» з позицією в причині (review 3, finding 1)
+    assert (f"акт — C07 ({f.message})" in next(
+        l for l in render_evidence(report).splitlines() if l.startswith("Не перевірено:")))
+    assert "3-3" in f.message

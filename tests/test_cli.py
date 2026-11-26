@@ -76,6 +76,16 @@ def test_incomplete_previous_reason_reaches_stdout(tmp_path):
     assert line.endswith("акт — C13 (подано попередніх актів: 1 з 2).")
 
 
+def test_empty_amount_reason_reaches_stdout(tmp_path):
+    """AC-03, AC-05: unknown через брак даних видно в «Не перевірено» на stdout (review 3, finding 1)."""
+    exp = load_expected(ROOT / "tests/fixtures/empty_amount")
+    res = run(scenario_args(exp, tmp_path / "r"), tmp_path)
+    assert res.returncode == 2
+    line = next(l for l in res.stdout.splitlines() if l.startswith("Не перевірено:"))
+    assert line != "Не перевірено: —"
+    assert "акт — C07 (" in line and "3-3" in line.split("акт — C07 (", 1)[1]
+
+
 # ---------------------------------------------------------------- незмінність входів (AC-13)
 @pytest.mark.parametrize("scenario,code", [("ok_many", 0), ("combo_three_errors", 1), ("missing_price", 2),
                                            ("missing_label", 3)])

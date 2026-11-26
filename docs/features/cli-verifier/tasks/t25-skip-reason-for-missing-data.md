@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/checks.py", "tests/test_checks.py", "tests/test_v
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "SELECT"
+status: "done"
+step: "COMMIT"
 ---
 
 # T25 — List every missing-data unknown under «Не перевірено» with its reason
