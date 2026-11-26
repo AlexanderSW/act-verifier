@@ -180,5 +180,6 @@ def test_journal_with_new_location_is_created_with_header(tmp_path):
     assert j.read_text(encoding="utf-8") == HEADER + "\n"
 
 
-def test_tracked_journal_is_untouched():
-    assert (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8") == HEADER + "\n"
+def test_tracked_journal_starts_with_the_header():
+    # незмінність за сесію перевіряє conftest.tracked_journal_unchanged; записи в журналі законні
+    assert (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8").splitlines()[0] == HEADER

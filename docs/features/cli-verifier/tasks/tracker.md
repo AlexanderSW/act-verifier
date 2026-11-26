@@ -25,7 +25,7 @@
 | T15 | Show the previous-acts completeness reason in the evidence block | domain | AlexanderSW | S | — | done | COMMIT |
 | T16 | Refuse abbreviated option names with outcome code 3 | ports | AlexanderSW | S | — | done | COMMIT |
 | T17 | Cite the КБ-2в sheet title as found, not the literal «КБ-2в» | domain | AlexanderSW | S | T15 | done | COMMIT |
-| T18 | Assert the test run leaves the tracked journal unchanged instead of empty | tests | AlexanderSW | S | — | todo | — |
+| T18 | Assert the test run leaves the tracked journal unchanged instead of empty | tests | AlexanderSW | S | — | done | COMMIT |
 | T19 | Map the remaining argparse errors to Ukrainian messages naming the option | ports | AlexanderSW | S | T16 | todo | — |
 | T20 | Assert expected and actual values of the three combo fails | tests | AlexanderSW | S | — | todo | — |
 | T21 | Align ContractPosition types and record the duplicate-code rule | docs | AlexanderSW | S | T17 | todo | — |

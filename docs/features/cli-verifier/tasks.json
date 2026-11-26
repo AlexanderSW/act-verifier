@@ -371,7 +371,7 @@
       ],
       "dod": "suite stays green with extra lines in `journal/agent_errors.csv`; a test that wrote to it would still fail",
       "file": "docs/features/cli-verifier/tasks/t18-tracked-journal-test.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T19",

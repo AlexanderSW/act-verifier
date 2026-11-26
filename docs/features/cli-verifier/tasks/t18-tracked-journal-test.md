@@ -9,8 +9,8 @@ files_hint: ["tests/test_cli.py", "tests/conftest.py"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T18 — Assert the test run leaves the tracked journal unchanged instead of empty

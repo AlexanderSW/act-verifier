@@ -192,7 +192,8 @@ def journal_report():
 
 def test_journal_header_constant_matches_repository_file():
     from conftest import ROOT
-    assert ",".join(JOURNAL_HEADER) + "\n" == (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8")
+    first = (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8").splitlines()[0]
+    assert ",".join(JOURNAL_HEADER) == first
 
 
 def test_journal_created_with_header_and_one_line_per_non_pass(tmp_path):
