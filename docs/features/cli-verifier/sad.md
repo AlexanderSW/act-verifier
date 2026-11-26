@@ -215,6 +215,214 @@ sequenceDiagram
 
 **Critical flow 2:** previous-acts completeness and the empty-value branches are within `checks` (one participant) — detailed per AC by the `sequences` stage.
 
+<!-- sequences stage (2026-11-26): flows F1–F5 below use the generic runtime vocabulary — client, service, data-store. All flows are synchronous (one command run → one outcome code); no queue, webhook or scheduled step exists, so no idempotency / retry / dead-letter steps. -->
+
+### F1: Verify an act — verdict and outcome code
+
+Realizes US-01, US-02, US-03 · shows AC-01, AC-02, AC-03, AC-12, AC-16.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as client (project owner or preparing agent)
+    participant S as service (verifier)
+    participant IN as data-store (input workbooks)
+    participant OUT as data-store (report folder)
+
+    Note over C,S: Precondition: invocation accepted (F2) and every layout label found in every input (F3)
+    C->>S: run with contract price, previous acts, current act, output folder
+    S->>IN: read contract positions, previous acts and current act (read only)
+    IN-->>S: values, each with file, sheet and row it was read from
+    S->>S: run row checks C01-C06 and C11 for every position
+    S->>S: run act checks C07-C10, C12, C13 against the totals printed in the act
+    S->>S: collect every finding incl. pass, skip records and the verdict, without stopping at the first fail
+    S->>OUT: write Excel report and Markdown report ending with the evidence block
+    Note over S,OUT: persists report per run (findings, skip records, sources, verdict)
+    OUT-->>S: report written
+    alt any finding is fail (e.g. price, remaining volume, КБ-3 vs КБ-2в)
+        S-->>C: every fail with expected and actual value, evidence block, verdict fail, outcome code 1
+    else no fail but an unknown or warning (e.g. empty act gives C12 warning)
+        S-->>C: evidence block, verdict needs_review, outcome code 2
+    else every check pass
+        S-->>C: evidence block, verdict pass, outcome code 0
+    end
+    Note over C,S: Postcondition: report lists every applied check incl. pass and ends with the evidence block (counts, not-checked list with reasons, rows actually read, discrepancies by status, verdict). Inputs unchanged.
+```
+
+### F2: Reject an invocation before anything is read or written
+
+Realizes US-03, US-01 · shows AC-06, AC-13.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as client (preparing agent or project owner)
+    participant S as service (verifier)
+    participant IN as data-store (input workbooks)
+    participant OUT as data-store (report folder and journal)
+
+    Note over C,S: Precondition: none - this is the first thing every run does
+    C->>S: run with options and input paths
+    S->>S: parse options (contract price and current act required, previous acts optional)
+    alt unknown option or a required input not given
+        S-->>C: plain-language message naming the missing input or unknown option, outcome code 3, no report, no verdict
+    else options parsed
+        S->>IN: check that each given input path exists
+        IN-->>S: exists or missing
+        S->>S: resolve report paths, journal path (if requested) and every input path to absolute, case-folded paths
+        alt an input path does not exist
+            S-->>C: message naming the missing file, outcome code 3, no report
+        else a report or journal path equals an input path
+            S-->>C: message that the verifier never writes to its inputs, outcome code 3, nothing written
+        else every output path differs from every input path
+            S->>S: continue to layout lookup (F3) and verification (F1)
+        end
+    end
+    Note over C,S: Postcondition: on outcome code 3 no file was created or changed. Inputs are byte-for-byte unchanged on every path.
+```
+
+### F3: Locate layout labels in each input
+
+Realizes US-04 · shows AC-07, AC-08, AC-09.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as client (employer reviewer)
+    participant S as service (verifier)
+    participant IN as data-store (input workbooks)
+
+    Note over C,S: Precondition: invocation accepted (F2)
+    C->>S: run on contract price, previous acts and current act
+    loop each input: contract price, each previous act, current act
+        S->>IN: open workbook read only, stored values only
+        alt file is not a readable workbook
+            S-->>C: message naming the file, outcome code 3, no report
+        else workbook opened
+            S->>S: normalize labels and cell text (trim, collapse whitespace incl. non-breaking, ignore case)
+            S->>IN: find sheet, header row and its columns by prefix match
+            S->>IN: find КБ-2в totals labels below the header row and the four КБ-3 labels
+            IN-->>S: candidate rows for each label
+            alt a required label has no matching row
+                S-->>C: input error naming the missing label, file and sheet, outcome code 3, no verdict
+            else a label matches more than one row
+                S-->>C: input error naming the label and the competing rows, outcome code 3, never the first match
+            else every label matches exactly one row
+                S->>IN: read positions from the header row down to the first «Разом без ПДВ» row
+                IN-->>S: rows with a position code, rows without a code, totals values
+                S->>S: keep rows with a position code, record skipped rows without a code, attach file, sheet and row to each value
+            end
+        end
+    end
+    S->>S: hand contract positions and acts to verification (F1)
+    Note over C,S: Postcondition: a shifted header or totals not right after the table give the same verdict and findings as the README layout, and the evidence block cites the rows actually found and the rows skipped. An empty value cell or a missing act number is missing data (F4), not an input error.
+```
+
+### F4: Missing data and previous-acts completeness
+
+Realizes US-02, US-03, US-01 · shows AC-04, AC-05, AC-10, AC-11. Expands the existing «Critical flow 2» note.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as client (project owner or preparing agent)
+    participant S as service (verifier)
+    participant OUT as data-store (report folder)
+
+    Note over C,S: Precondition: every input read with its layout found (F3). Empty cell or formula without a stored value is empty, never 0.
+    C->>S: verify current act against contract price and previous acts
+    S->>S: read act number N from the КБ-2в title «Акт №» of the current act and of each previous act
+    S->>S: count K distinct previous act numbers within 1 to N-1
+    alt previous acts are not exactly 1 to N-1 (fewer or none, duplicate, outside 1 to N-1, or a number not readable)
+        S->>S: mark C05 of every position and C13 unknown with the reason, e.g. «previous acts supplied: K of N-1»
+    else previous acts complete
+        S->>S: remaining volume = contract quantity minus sum of that position in previous acts (repeated codes summed)
+        alt act quantity exceeds remaining volume
+            S->>S: C05 fail, expected remaining volume, actual act quantity, sources contract price and each previous act
+        else quantity of that position empty in a previous act
+            S->>S: C05 of that position unknown
+        end
+    end
+    loop each position of the current act
+        alt quantity empty
+            S->>S: C11 unknown, C04 and C05 recorded as not checked with the reason
+        else price empty
+            S->>S: C11 unknown, C03 and C04 recorded as not checked with reason «empty price», no substituted price
+        else amount empty
+            S->>S: C11 unknown, C04 not checked, C07 unknown naming the position whose amount is missing
+        end
+    end
+    S->>S: an empty printed total makes unknown every check that uses it, naming the value
+    S->>S: all other checks still run, verdict at best needs_review
+    S->>OUT: write report with unknown findings and the not-checked list in the evidence block
+    Note over S,OUT: persists report per run (unknown findings, skip records with reasons)
+    S-->>C: verdict needs_review with outcome code 2, or fail with outcome code 1 if any check failed, never pass
+    Note over C,S: Postcondition: no missing value was replaced by a guess, every skipped check is listed with position and reason.
+```
+
+### F5: Opt-in error journal
+
+Realizes US-05 · shows AC-14.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as client (project owner)
+    participant S as service (verifier)
+    participant J as data-store (error journal)
+
+    Note over C,S: Precondition: verification reached a verdict (F1) and the journal path, if any, differs from every input (F2)
+    C->>S: run with or without the journal option, optionally with a journal location
+    alt journal option not given
+        S->>S: leave the journal untouched
+    else journal option given (alone means journal/agent_errors.csv relative to the current folder)
+        S->>J: check whether the journal file exists at the location
+        J-->>S: exists or absent
+        opt journal file absent
+            S->>J: create the file with the journal header line
+        end
+        loop each fail, unknown or warning finding
+            S->>S: escape a non-numeric text field starting with = + - or @ with a leading apostrophe, keep numbers exactly as read
+            S->>J: append one line, found by the verifier, resolution empty
+            Note over S,J: persists journal line with the header columns date, act_file, code, check, status, expected, actual, found_by, resolution
+        end
+    end
+    S-->>C: outcome code of the verdict (0, 1 or 2), unchanged by the journal
+    Note over C,S: Postcondition: pass findings are never journaled. Without the option no journal file is opened.
+```
+
+### Coverage: user stories and acceptance criteria
+
+| Spec item | Shown in |
+|---|---|
+| US-01 Verify an act from command line | F1, F2, F4, Critical flow 1 |
+| US-02 Trust report through evidence | F1 (evidence block), F4 (not-checked list) |
+| US-03 Branch on outcome code | F1 (0/1/2), F2 and F3 (3), F4 (2) |
+| US-04 Verify act with different layout | F3 |
+| US-05 Log errors only on request | F5 |
+| US-06 Prove readiness on reference scenarios | F1–F5 run through the command by the test suite |
+| AC-01 happy path | F1 — branch «every check pass» |
+| AC-02 multiple discrepancies | F1 — collect without stopping, branch «any finding is fail» |
+| AC-03 evidence block | F1 — report write and postcondition |
+| AC-04 missing price | F4 — branch «price empty» |
+| AC-05 what each missing value suppresses | F4 — loop over positions, three empty-value branches |
+| AC-06 invocation error | F2 — branch «unknown option or a required input not given» |
+| AC-07 missing layout label | F3 — branch «a required label has no matching row» |
+| AC-08 ambiguous layout | F3 — branch «a label matches more than one row» |
+| AC-09 shifted layout | F3 — branch «every label matches exactly one row» and postcondition |
+| AC-10 remaining volume from previous acts | F4 — branch «act quantity exceeds remaining volume» |
+| AC-11 incomplete previous acts | F4 — branch «previous acts are not exactly 1 to N-1» |
+| AC-12 КБ-3 against КБ-2в | F1 — act checks against printed totals, branch «any finding is fail» |
+| AC-13 inputs are never modified | F2 — branch «a report or journal path equals an input path» |
+| AC-14 opt-in journal | F5 |
+| AC-15 reference scenarios | N/A — not a runtime flow: test suite and fixture generator (build-time check). The runtime paths it asserts are F1–F5. |
+| AC-16 empty act | F1 — branch «no fail but an unknown or warning» (C12 warning) |
+
+**Flagged for design (no ADR written):**
+- «Critical flow 1» (pre-existing) names the concrete modules `cli`, `loaders`, `checks`, `report` as participants, while F1–F5 use the generic runtime vocabulary. It is left untouched. Reconcile by hand if one style is preferred.
+- F5: the journal `code` column for act-level checks without a position (C07–C10, C12, C13) is not fixed by the spec. This is an implementation detail for `tasks`.
+- No new participant beyond §5, and no new ADR-worthy decision: every flow is synchronous, so there is no idempotency, retry or dead-letter strategy to decide.
+
 ## 7. Deployment view
 
 <!-- N/A: local developer install (`pip install -e ".[dev]"`), console script `act-verifier`; no server, no replicas, no monitoring. Run-time target is in §10 QG-4. -->
