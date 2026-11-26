@@ -32,7 +32,7 @@
       "dod": "Each of AC-01b, AC-04, AC-08, AC-09 maps to a named sentence in SKILL.md «Кроки», and the suite stays at 304 + N passed, 0 failed, 0 xfailed.",
       "files_hint": [".claude/skills/check-act/SKILL.md"],
       "file": "docs/features/check-act-skill/tasks/T3-skill-run-steps.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T4",
