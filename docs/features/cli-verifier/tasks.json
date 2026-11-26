@@ -206,7 +206,7 @@
         "tests/test_report.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t10-error-journal.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T11",

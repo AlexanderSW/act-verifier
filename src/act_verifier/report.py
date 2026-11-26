@@ -6,9 +6,11 @@
 
 from __future__ import annotations
 
+import csv
 import datetime as _dt
 import io
 import zipfile
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -188,6 +190,42 @@ def write_excel(report: Report, path: Path) -> None:
 
 
 # ---------------------------------------------------------------- журнал
-def append_error_log(report: Report, log_path: Path, act_file: str) -> None:
-    """Дописує fail/unknown/warning у journal/agent_errors.csv."""
-    raise NotImplementedError
+JOURNAL_HEADER = ("date", "act_file", "code", "check", "status", "expected", "actual", "found_by", "resolution")
+FOUND_BY = "act-verifier"
+_FORMULA_START = ("=", "+", "-", "@")
+
+
+def _escape(value: object) -> str:
+    """Текст, що не є числом і починається з = + - @, — з апострофом (не стане формулою, AC-14).
+
+    Числа (зокрема «-5.00») пишуться точно як прочитано.
+    """
+    text = "" if value is None else str(value)
+    if not text.startswith(_FORMULA_START):
+        return text
+    try:
+        if Decimal(text).is_finite():
+            return text
+    except InvalidOperation:
+        pass
+    return "'" + text
+
+
+def append_error_log(report: Report, log_path: Path, act_file: str, *, today: _dt.date | None = None) -> None:
+    """Дописує fail/unknown/warning у журнал (за замовчуванням journal/agent_errors.csv).
+
+    Файлу немає (або він порожній) — створюється з рядком заголовка. Лише дописування.
+    """
+    path = Path(log_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    new = not path.exists() or path.stat().st_size == 0
+    date = (today or _dt.date.today()).isoformat()
+    with path.open("a", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh, lineterminator="\n")
+        if new:
+            w.writerow(JOURNAL_HEADER)
+        for f in report.findings:
+            if f.status is Status.PASS:
+                continue
+            w.writerow([date] + [_escape(v) for v in (act_file, f.code, f.check, f.status.value,
+                                                       f.expected, f.actual)] + [FOUND_BY, ""])

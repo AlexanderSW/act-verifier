@@ -151,3 +151,72 @@ def test_write_markdown(tmp_path):
     path = tmp_path / "x" / "r.md"
     write_markdown(rep, path)
     assert path.read_text(encoding="utf-8") == render_markdown(rep)
+
+
+# ================================================================ T10: журнал помилок (AC-14)
+import csv  # noqa: E402
+import datetime as dt  # noqa: E402
+
+from act_verifier.report import JOURNAL_HEADER, append_error_log  # noqa: E402
+
+HEADER_LINE = "date,act_file,code,check,status,expected,actual,found_by,resolution\n"
+TODAY = dt.date(2026, 11, 26)
+
+
+def journal_report():
+    statuses = {("2-1", "C03_price_matches_contract"): Status.FAIL,
+                ("5-2", "C11_required_values_present"): Status.UNKNOWN,
+                (None, "C12_act_not_empty"): Status.WARNING}
+    return make_report(statuses=statuses)
+
+
+def test_journal_header_constant_matches_repository_file():
+    from conftest import ROOT
+    assert ",".join(JOURNAL_HEADER) + "\n" == (ROOT / "journal/agent_errors.csv").read_text(encoding="utf-8")
+
+
+def test_journal_created_with_header_and_one_line_per_non_pass(tmp_path):
+    path = tmp_path / "j" / "agent_errors.csv"
+    append_error_log(journal_report(), path, "act_03.xlsx", today=TODAY)
+    text = path.read_text(encoding="utf-8")
+    assert text.startswith(HEADER_LINE)
+    rows = list(csv.reader(text.splitlines()))
+    assert rows[1:] == [
+        ["2026-11-26", "act_03.xlsx", "2-1", "C03_price_matches_contract", "fail", "100.00", "100.00", "act-verifier", ""],
+        ["2026-11-26", "act_03.xlsx", "5-2", "C11_required_values_present", "unknown", "100.00", "100.00", "act-verifier", ""],
+        ["2026-11-26", "act_03.xlsx", "", "C12_act_not_empty", "warning", "1", "1", "act-verifier", ""],
+    ]
+    assert "\r" not in text
+
+
+def test_journal_appends_without_second_header(tmp_path):
+    path = tmp_path / "agent_errors.csv"
+    path.write_text(HEADER_LINE + "2026-11-01,old.xlsx,1-1,C01_position_in_contract,fail,,,людина,виправлено\n",
+                    encoding="utf-8")
+    append_error_log(journal_report(), path, "act_03.xlsx", today=TODAY)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert lines.count(HEADER_LINE.strip()) == 1 and len(lines) == 5
+    assert lines[1].startswith("2026-11-01,old.xlsx")
+
+
+def test_journal_pass_only_report_writes_header_and_no_lines(tmp_path):
+    path = tmp_path / "agent_errors.csv"
+    append_error_log(make_report(), path, "act_03.xlsx", today=TODAY)
+    assert path.read_text(encoding="utf-8") == HEADER_LINE
+
+
+def test_journal_escapes_formula_like_text_but_not_numbers(tmp_path):
+    rep = make_report(statuses={("2-1", "C03_price_matches_contract"): Status.FAIL})
+    f = next(f for f in rep.findings if f.status is Status.FAIL)
+    f.code, f.expected, f.actual = "=SUM(A1)", "-5.00", "+cmd"
+    path = tmp_path / "agent_errors.csv"
+    append_error_log(rep, path, "@act.xlsx", today=TODAY)
+    row = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))[1]
+    assert row[1:7] == ["'@act.xlsx", "'=SUM(A1)", "C03_price_matches_contract", "fail", "-5.00", "'+cmd"]
+
+
+def test_journal_date_defaults_to_today(tmp_path):
+    path = tmp_path / "agent_errors.csv"
+    append_error_log(journal_report(), path, "act_03.xlsx")
+    row = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))[1]
+    assert row[0] == dt.date.today().isoformat()
