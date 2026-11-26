@@ -115,6 +115,7 @@ def test_journal_location_on_the_act_in_other_case_is_refused(tmp_path):
     (["--act", ROOT / "tests/fixtures/ok_many/act_03.xlsx"], "--contract"),
     (["--contract", CONTRACT], "--act"),
     ([], "--contract"),
+    (["--contr", CONTRACT, "--act", ROOT / "tests/fixtures/ok_many/act_03.xlsx"], "--contr"),
 ])
 def test_invocation_errors_exit_3_never_2(tmp_path, args, needle):
     res = run(args + ["--out", tmp_path / "r"], tmp_path)

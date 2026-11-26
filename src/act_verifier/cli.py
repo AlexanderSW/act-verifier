@@ -39,7 +39,8 @@ class _Parser(argparse.ArgumentParser):
 
 
 def _parser() -> _Parser:
-    p = _Parser(prog="act-verifier", description="Звірка акта КБ-2в / КБ-3 з договором")
+    # allow_abbrev=False: «--contr» — невідомий параметр (cli.md:51), а не скорочення --contract
+    p = _Parser(prog="act-verifier", description="Звірка акта КБ-2в / КБ-3 з договором", allow_abbrev=False)
     p.add_argument("--contract", type=Path, required=True, help="договірна ціна (.xlsx)")
     p.add_argument("--previous", type=Path, nargs="*", default=[], help="попередні акти (.xlsx)")
     p.add_argument("--act", type=Path, required=True, help="перевірюваний акт (.xlsx)")

@@ -76,6 +76,20 @@ def test_invocation_errors_exit_3_not_2(tmp_path, capsys, args, needle):
     assert files(out) == []
 
 
+@pytest.mark.parametrize("short", ["--contr", "--prev", "--o", "--jour"])
+def test_abbreviated_option_is_an_invocation_error(tmp_path, capsys, short):
+    """Скорочена назва — невідомий параметр (cli.md:51), а не --contract/--previous/--out/--journal."""
+    out = tmp_path / "r"
+    full = {"--contr": "--contract", "--prev": "--previous", "--o": "--out", "--jour": "--journal"}[short]
+    a = [short if x == full else x for x in argv(out)] + ([short] if full == "--journal" else [])
+    if full == "--out":
+        a = argv(None) + [short, str(out)]
+    assert main(a) == 3
+    err = capsys.readouterr()
+    assert short in err.err and err.out == ""
+    assert files(out) == [] and not (tmp_path / "journal").exists()
+
+
 def test_missing_input_file(tmp_path, capsys):
     assert main(argv(tmp_path / "r", act=tmp_path / "nope.xlsx")) == 3
     assert "nope.xlsx" in capsys.readouterr().err

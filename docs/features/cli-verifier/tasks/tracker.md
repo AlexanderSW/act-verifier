@@ -23,7 +23,7 @@
 | T13 | Add command-level tests | tests | AlexanderSW | M | T3, T12 | done | COMMIT |
 | T14 | Update docs/checks.md with the spec's rules | docs | AlexanderSW | S | — | done | COMMIT |
 | T15 | Show the previous-acts completeness reason in the evidence block | domain | AlexanderSW | S | — | done | COMMIT |
-| T16 | Refuse abbreviated option names with outcome code 3 | ports | AlexanderSW | S | — | todo | — |
+| T16 | Refuse abbreviated option names with outcome code 3 | ports | AlexanderSW | S | — | done | COMMIT |
 | T17 | Cite the КБ-2в sheet title as found, not the literal «КБ-2в» | domain | AlexanderSW | S | T15 | todo | — |
 | T18 | Assert the test run leaves the tracked journal unchanged instead of empty | tests | AlexanderSW | S | — | todo | — |
 | T19 | Map the remaining argparse errors to Ukrainian messages naming the option | ports | AlexanderSW | S | T16 | todo | — |

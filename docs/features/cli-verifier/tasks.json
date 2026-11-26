@@ -333,7 +333,7 @@
       ],
       "dod": "`--contr …` exits 3 with the option named on stderr; no report written",
       "file": "docs/features/cli-verifier/tasks/t16-no-abbreviated-options.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T17",

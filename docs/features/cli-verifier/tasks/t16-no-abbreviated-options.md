@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/cli.py", "tests/test_cli.py", "tests/test_cli_uni
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T16 — Refuse abbreviated option names with outcome code 3
