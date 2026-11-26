@@ -54,7 +54,7 @@
       "dod": "Each of AC-05, AC-05b, AC-06, AC-06b maps to a named sentence in SKILL.md «Перевірки не було» (guess allowed only for label/sheet errors, none for invocation/unreadable/overwrite/duplicate, crash reads no report), and the suite stays at 304 + N passed, 0 failed, 0 xfailed.",
       "files_hint": [".claude/skills/check-act/SKILL.md"],
       "file": "docs/features/check-act-skill/tasks/T5-skill-no-verification.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T6",

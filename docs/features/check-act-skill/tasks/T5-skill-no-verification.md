@@ -9,7 +9,7 @@ files_hint: [".claude/skills/check-act/SKILL.md"]
 owner: "AlexanderSW"
 estimate: "S"           # ~1 h
 context_budget: "M"     # 48 inlined lines, 1 extra file (src/act_verifier/cli.py _message() for the message shapes)
-status: "todo"
+status: "done"
 step: ""
 ---
 

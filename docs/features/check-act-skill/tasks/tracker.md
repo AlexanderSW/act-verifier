@@ -12,7 +12,7 @@
 | T2 | Add the outcome-code map and run-command block, with drift tests against the verifier's contract | ports | AlexanderSW | M | T1 | done | — |
 | T3 | Write the skill's run steps: collect inputs, run the verifier, apply the verdict-source rule | ports | AlexanderSW | S | T2 | done | — |
 | T4 | Write the skill's red lines and the five-section reply format | ports | AlexanderSW | M | T3 | done | — |
-| T5 | Write the skill's no-verification branch: input errors by kind and crashes | ports | AlexanderSW | S | T3 | todo | — |
+| T5 | Write the skill's no-verification branch: input errors by kind and crashes | ports | AlexanderSW | S | T3 | done | — |
 | T6 | Write the demo script demo.md with empty actual-result fields | docs | AlexanderSW | S | — | todo | — |
 | T7 | Add the README section «Агент L1: Skill check-act», mark the draft superseded | docs | AlexanderSW | S | — | todo | — |
 | T8 | Rehearse the three demo scenarios and record actual results (manual) | tests | AlexanderSW | M | T4, T5, T6 | todo | — |
