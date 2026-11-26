@@ -389,7 +389,7 @@
       ],
       "dod": "no English argparse text reaches stderr for the known argparse message shapes",
       "file": "docs/features/cli-verifier/tasks/t19-ukrainian-invocation-messages.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T20",

@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/cli.py", "tests/test_cli_unit.py"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T19 — Map the remaining argparse errors to Ukrainian messages naming the option

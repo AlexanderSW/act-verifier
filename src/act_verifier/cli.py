@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -32,10 +33,23 @@ class _Parser(argparse.ArgumentParser):
     """argparse без власного виходу з кодом 2: 2 означає needs_review (cli.md §2)."""
 
     def error(self, message: str):
-        for prefix in ("the following arguments are required:", "unrecognized arguments:"):
-            if message.startswith(prefix):
-                raise InputError("invocation", label=message[len(prefix):].strip())
-        raise InputError("invocation", label=message)
+        """Текст argparse англійською не виводиться: лише українською, з назвою параметра (cli.md §3)."""
+        raise InputError("invocation", label=_invocation_text(message))
+
+
+_ARGPARSE = [
+    (re.compile(r"the following arguments are required: (?P<opt>.+)"), "не задано обов'язкові параметри: {opt}"),
+    (re.compile(r"unrecognized arguments: (?P<opt>.+)"), "невідомий параметр: {opt}"),
+    (re.compile(r"argument (?P<opt>\S+?): expected (?:one|at least one) argument"), "параметр {opt} потребує значення"),
+    (re.compile(r"argument (?P<opt>\S+?): .+"), "неправильне значення параметра {opt}"),
+]
+
+
+def _invocation_text(message: str) -> str:
+    for pattern, text in _ARGPARSE:
+        if m := pattern.fullmatch(message.strip()):
+            return text.format(opt=m.group("opt"))
+    return "неправильний виклик"
 
 
 def _parser() -> _Parser:

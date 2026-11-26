@@ -90,6 +90,25 @@ def test_abbreviated_option_is_an_invocation_error(tmp_path, capsys, short):
     assert files(out) == [] and not (tmp_path / "journal").exists()
 
 
+ENGLISH = ("expected", "argument", "required", "unrecognized", "invalid", "usage", "error:")
+
+
+@pytest.mark.parametrize("args,option,phrase", [
+    (["--contract"], "--contract", "потребує значення"),
+    (["--contract", "c.xlsx", "--act"], "--act", "потребує значення"),
+    (["--contract", "c.xlsx", "--act", "a.xlsx", "--out"], "--out", "потребує значення"),
+    (["--act", "a.xlsx"], "--contract", "не задано обов'язкові параметри"),
+    (["--contract", "c.xlsx", "--act", "a.xlsx", "--fast"], "--fast", "невідомий параметр"),
+    (["--contract", "c.xlsx", "--act", "a.xlsx", "zzz"], "zzz", "невідомий параметр"),
+])
+def test_invocation_messages_are_ukrainian_and_name_the_option(tmp_path, capsys, args, option, phrase):
+    """Жоден англомовний текст argparse не потрапляє в stderr (cli.md §3; review finding 5)."""
+    assert main(args) == 3
+    err = capsys.readouterr().err
+    assert option in err and phrase in err
+    assert not any(word in err.casefold() for word in ENGLISH), err
+
+
 def test_missing_input_file(tmp_path, capsys):
     assert main(argv(tmp_path / "r", act=tmp_path / "nope.xlsx")) == 3
     assert "nope.xlsx" in capsys.readouterr().err
