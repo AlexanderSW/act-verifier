@@ -21,7 +21,11 @@ Committed approach (owner-accepted in brief §7, 2026-11-26): a check-act skill 
 
 Traceability and decisions taken in this specify run (owner, 2026-11-26), on top of brief §5/§7:
 - Every line of the skill's outcome-code map carries the code and the verifier's own verdict token (`pass`, `fail`, `needs_review`) or the input-error meaning, so a test can compare the map with the verifier's codes (brief §6 risk 3).
-- On an input error the L1 agent relays the verifier's message as written and offers a guess at a layout label's name only when the message is about a missing or ambiguous layout label; for every other input error (invocation, missing or unreadable file, refused overwrite, repeated position code) it offers no label guess (brief §6 risk 4).
+- On an input error the L1 agent relays the verifier's message as written. Whether it may offer a guess depends on the verifier's error kind: for `missing_label` and `ambiguous_label` (a missing sheet is reported as `missing_label`) it may offer a guess at the label's or sheet's name; for `invocation`, `unreadable_file`, `overwrite_refused` and `duplicate_code` it offers none. The guess is built only from the verifier's message and what the accepting person says; the L1 agent never opens an input file to make it, so it runs no command other than the verifier (brief §6 risk 4; clarify 2026-11-26).
+- Verdict source: a run has a verdict only when the verifier exits with code 0, 1 or 2 **and** that run's output contains the line «Вердикт: pass|fail|needs_review». Exit code 1 without that line is a verifier crash: verification did not happen, no report is read, and the L1 agent shows the error output and asks the accepting person (README «Коди виходу»: an unexpected exception also returns 1; clarify 2026-11-26).
+- No default inputs: the L1 agent never substitutes a default path for the contract price, the previous acts or the act; it asks for every input the accepting person has not named (CLAUDE.md «не підставляти значення»; clarify 2026-11-26).
+- Reply format: every reply after a run with a verdict has five sections under these fixed Ukrainian headings, in this order — «Вердикт», «Знахідки», «Не перевірено», «Що зробити», «Звідки числа». On pass «Знахідки» says «розбіжностей немає» and «Що зробити» tells the accepting person to review what was not checked and decide; on fail and needs_review every fail, unknown and warning finding gets one line (AC-02, AC-02b) (clarify 2026-11-26).
+- Skill location: the live check-act skill is `.claude/skills/check-act/SKILL.md`; the owner's draft in the feature folder is not a live copy (§8 OQ 3). The form of the run command (`act-verifier …` or `.venv/Scripts/python -m act_verifier …`) is settled at design together with §8 OQ 1 (clarify 2026-11-26).
 - Strict numbers: every number in the L1 agent's reply appears verbatim in the report or its evidence block; the agent states no differences, sums or percentages of its own (brief §1 red line «агент не рахує сам»).
 - A report is read only after verdicts pass / fail / needs_review; on an input error nothing from any report is used, and each demo scenario writes into its own report folder (brief §6 risk 2, owner decision).
 - Whether the skill pre-allows the verifier command, so the demo has no permission prompt, is left to design (§8).
@@ -92,43 +96,61 @@ Traceability and decisions taken in this specify run (owner, 2026-11-26), on top
 
 **Given** the accepting person names the contract price, previous acts 1 and 2 and the act of the demo scenario «ok_many», and the verifier finds no discrepancy in it
 **When** the accepting person asks the L1 agent to check the act
-**Then** the L1 agent runs the verifier on exactly those files and replies with the verdict pass, presented as the verifier's verdict, what was not checked (from the evidence block), where the numbers come from and where both report files are; nowhere does the reply say the act is accepted or may be signed
+**Then** the L1 agent runs the verifier on exactly those files and replies with the verdict pass, presented as the verifier's verdict, what was not checked (from the evidence block), where the numbers come from and where both report files are, under the five fixed headings (§1 «Reply format»); nowhere does the reply say the act is accepted or may be signed
+
+### AC-01b (US-01) — error
+
+**Given** the accepting person names the act but not the contract price, or names no previous acts and has not said the act is act 1
+**When** the accepting person asks the L1 agent to check the act
+**Then** the L1 agent asks for the missing inputs before running and substitutes no default path; it runs the verifier only on files the accepting person has named (previous acts then follow AC-04)
 
 ### AC-02 (US-02) — happy path
 
-**Given** the act of the demo scenario «combo_three_errors», in which the verifier finds three failing findings: the price of position 3-2, the remaining volume of position 2-1, and the КБ-3 certificate against the КБ-2в totals
+**Given** the contract price, previous acts 1 and 2 and the act of the demo scenario «combo_three_errors» are named, and in that act the verifier finds three failing findings: the price of position 3-2, the remaining volume of position 2-1, and the КБ-3 certificate against the КБ-2в totals
 **When** the accepting person asks the L1 agent to check it
 **Then** the reply gives the verdict fail and lists exactly those three discrepancies, one line each in plain language, with the position code (or «акт» for an act-level finding), what is wrong, the expected and actual values exactly as the report gives them, and where to look in the file, followed by one to three concrete actions for the accepting person; no finding is added and none of the three is left out
+
+### AC-02b (US-02) — edge
+
+**Given** a run with the verdict needs_review whose report holds unknown or warning findings
+**When** the accepting person asks the L1 agent to check the act
+**Then** the reply gives the verdict needs_review and lists every unknown and warning finding in the report, one line each in plain language, with the position code (or «акт»), the status, what is missing or doubtful, the values exactly as the report gives them (or that a value is empty) and where to look in the file, followed by one to three concrete actions for the accepting person; no finding is added or left out, and the reply never says «все гаразд»
 
 ### AC-03 (US-01) — domain invariant
 
 **Given** any reply of the L1 agent — after a run with the verdict pass, fail or needs_review, after an input error, or before a run
 **When** the L1 agent replies to the accepting person
-**Then** every numeric value in the reply (money, quantity, percentage, count of checks, row number, act number) appears verbatim in that run's report or evidence block, in the verifier's input-error message, or in what the accepting person said; a warning before a run names no figure from anywhere else; the L1 agent states no difference, sum, percentage or rounded figure of its own and never reads the act files to compute anything — the invariant «all numbers come only from the verifier's report»
+**Then** every numeric value in the reply (money, quantity, percentage, count of checks, row number, act number) appears verbatim in that run's report or evidence block, in the verifier's input-error message, or in what the accepting person said; a warning before a run names no figure from anywhere else; the L1 agent states no difference, sum, percentage or rounded figure of its own and never reads the act files to compute anything ; identifiers that contain digits (position codes such as «2-1», file and sheet names) are not numeric values, but they too come only from the report, the input-error message or what the accepting person said — the invariant «all numbers come only from the verifier's report»
 
 ### AC-04 (US-01) — domain invariant
 
-**Given** the accepting person states the act's number N (or the L1 agent asks for it before the run, without reading the act file) and supplies no previous acts, or fewer than acts 1 to N−1
+**Given** the accepting person states the act's number N (or, only when they have not stated it, the L1 agent asks for it once before the run, without reading the act file) and, by the accepting person's own account, supplies no previous acts or fewer than acts 1 to N−1 — completeness is judged from what the accepting person says, never from file names
 **When** the accepting person asks the L1 agent to check the act
 **Then** the L1 agent first asks for the missing previous acts; if the accepting person confirms they are not available, it runs without them, warns before the run that the remaining-volume and cumulative checks will be unknown, and replies with the verifier's verdict — at best needs_review, never pass — listing those checks under «Не перевірено» as «невідомо» with the reason the evidence block gives — never «все гаразд» (the invariant «a missing value never yields pass»)
 
 ### AC-05 (US-03) — error
 
-**Given** the act of the demo scenario «missing_label», which has no «Разом без ПДВ» totals row, so the verifier stops with an input error
+**Given** the contract price, previous acts 1 and 2 and the act of the demo scenario «missing_label» are named, and that act has no «Разом без ПДВ» totals row, so the verifier stops with an input error
 **When** the accepting person asks the L1 agent to check it
-**Then** the reply says that verification did not happen and gives no verdict, quotes the verifier's message as written, and names the layout label «Разом без ПДВ», the file and the sheet from that message; the L1 agent may suggest how the label might be written in this file — looking at the file only to find the label, never to compute — and marks the suggestion as a guess; it asks the accepting person what to do, and the act file is unchanged
+**Then** the reply says that verification did not happen and gives no verdict, quotes the verifier's message as written, and names the layout label «Разом без ПДВ», the file and the sheet from that message; the L1 agent may suggest how the label might be written, built only from the verifier's message and what the accepting person says — it does not open the act file — and marks the suggestion as a guess; it asks the accepting person what to do, and the act file is unchanged
 
 ### AC-05b (US-03) — error
 
-**Given** the verifier stops with an input error because a layout label matches more than one row, or because a required sheet is missing
+**Given** the verifier stops with an input error of kind `ambiguous_label` (a layout label matches more than one row) or `missing_label` for a required sheet
 **When** the L1 agent replies
-**Then** it says that verification did not happen and gives no verdict, quotes the verifier's message as written, and names the label or the sheet and the file from that message; for an ambiguous label it also names the competing rows the message lists and picks none of them; it may suggest what the label or sheet might be, marked as a guess, asks the accepting person what to do, and the act file is unchanged
+**Then** it says that verification did not happen and gives no verdict, quotes the verifier's message as written, and names the label or the sheet and the file from that message; for an ambiguous label it also names the competing rows the message lists and picks none of them; it may suggest what the label or sheet might be, built only from the message and what the accepting person says and marked as a guess, without opening the file; it asks the accepting person what to do, and the act file is unchanged
 
 ### AC-06 (US-03) — error
 
-**Given** the verifier stops with an input error that names no layout label or sheet — a wrong invocation, a missing or unreadable file, a refused overwrite or a repeated position code
+**Given** the verifier stops with an input error of kind `invocation` (wrong invocation), `unreadable_file` (a missing or unreadable file), `overwrite_refused` (a refused overwrite) or `duplicate_code` (a repeated position code — even though its message names a sheet and a position code)
 **When** the L1 agent replies
 **Then** it says that verification did not happen, quotes the verifier's message as written, offers no guess at a label name and asks the accepting person to correct the input; it changes no file and does not rerun with other files unless the accepting person agrees
+
+### AC-06b (US-03) — error
+
+**Given** the verifier exits with code 1 but its output contains no line «Вердикт: …» (a verifier crash), and the report folder may hold a report from an earlier run
+**When** the L1 agent replies
+**Then** it says that verification did not happen and gives no verdict, shows the verifier's error output as written, reads no report and states no finding or number from any report, and asks the accepting person what to do; it changes no file
 
 ### AC-07 (US-04) — authorization
 
@@ -146,25 +168,25 @@ Traceability and decisions taken in this specify run (owner, 2026-11-26), on top
 
 **Given** the report folder already holds the report of an earlier run on an act with the same file name — for example the three discrepancies of «combo_three_errors»
 **When** the L1 agent checks the act of «missing_label» and the verifier stops with an input error
-**Then** the reply contains no finding, number or verdict from that earlier report; the L1 agent reads a report only after a run whose verdict is pass, fail or needs_review
+**Then** the reply contains no finding, number or verdict from that earlier report; the L1 agent reads a report only after a run that has a verdict — exit code 0, 1 or 2 together with the line «Вердикт: …» in that run's output (§1 «Verdict source»)
 
 ### AC-10 (US-05) — cross-context
 
 **Given** the check-act skill's outcome-code map and its run command
 **When** the project owner runs the test suite
-**Then** the suite passes only if every outcome the verifier defines appears in the map with the same code — pass, fail and needs_review with the verifier's own verdict token, the input error with its meaning «verification did not happen» — the map names no outcome code the verifier lacks, and every command option the skill names is one the verifier accepts; on any mismatch it fails and names the code or the option; the expected codes and options are taken from the verifier itself, not from a copy kept in the test
+**Then** the suite passes only if every outcome the verifier defines appears in the map with the same code — pass, fail and needs_review with the verifier's own verdict token, the input error with its meaning «verification did not happen» — the map names no outcome code the verifier lacks, and the set of options in the skill's run-command block equals the set of options the verifier accepts, `--help` excepted (prose outside that block is not scanned); the input-error line carries code 3 and the token «перевірки не було» taken from the verifier's own input-error message; on any mismatch it fails and names the code, the option or the token; the expected codes and options are taken from the verifier itself, not from a copy kept in the test
 
 ### AC-11 (US-05) — error
 
-**Given** the check-act skill is missing, its header cannot be read, its name is not «check-act» or its description is empty
+**Given** the check-act skill at `.claude/skills/check-act/SKILL.md` is missing, its header cannot be read, its name is not «check-act» or its description is empty
 **When** the project owner runs the test suite
 **Then** the suite fails and names which of these four is wrong; with a valid skill the suite passes without calling a model or the network
 
 ### AC-12 (US-06) — happy path
 
-**Given** the demo document for the three demo scenarios «ok_many», «combo_three_errors» and «missing_label»
+**Given** the demo document `docs/features/check-act-skill/demo.md` for the three demo scenarios «ok_many», «combo_three_errors» and «missing_label»
 **When** the project owner rehearses the demo
-**Then** for each scenario the document gives the prompt, the expected behaviour (verdict pass with no claim of acceptance; three discrepancies whose numbers match the report; «перевірки не було» naming «Разом без ПДВ», with the act file unchanged), its own report folder and an «actual result» field; after the rehearsal all three fields hold what the L1 agent actually did, deviations included
+**Then** for each scenario the document gives the prompt — naming the contract price, previous acts 1 and 2 and the act explicitly — the expected behaviour (verdict pass with no claim of acceptance; three discrepancies whose numbers match the report; «перевірки не було» naming «Разом без ПДВ», with the act file unchanged), its own report folder and an «actual result» field; after the rehearsal all three fields hold what the L1 agent actually did, deviations included
 
 ### AC-13 (US-07) — happy path
 
@@ -187,7 +209,7 @@ Traceability and decisions taken in this specify run (owner, 2026-11-26), on top
 
 - **Data classification:** internal — the inputs are the synthetic contract price and acts in the repository (README: «Усі дані в репозиторії синтетичні»); real acts are out of scope.
 - **Personal data touched:** none.
-- **AuthZ/AuthN impact:** no new permission check in the verifier. The check-act skill lets the L1 agent run the verifier and read the report of the run it started; it may look at an input file only to locate a layout label after an input error. The L1 agent itself writes no file: the verifier writes only into the report folder and, on the accepting person's explicit request, appends to the error journal. Whether the verifier command is pre-allowed, and how narrowly, is §8 OQ 1.
+- **AuthZ/AuthN impact:** no new permission check in the verifier. The check-act skill lets the L1 agent run the verifier and read the report of the run it started; it opens no input file, not even to guess a layout label after an input error, and runs no command other than the verifier. The L1 agent itself writes no file: the verifier writes only into the report folder and, on the accepting person's explicit request, appends to the error journal. Whether the verifier command is pre-allowed, and how narrowly, is §8 OQ 1.
 - **Abuse cases:**
   - Text in an act cell (a note row, a label) phrased as an instruction to the agent: treated as data; the L1 agent may quote it but never follows it.
   - The L1 agent «fixes» an input file to get past an input error: forbidden; it relays the message and asks the accepting person, and the file stays unchanged (AC-05, AC-06).
@@ -204,6 +226,6 @@ Traceability and decisions taken in this specify run (owner, 2026-11-26), on top
 
 ## 8. Open questions
 
-- [ ] Should the check-act skill pre-allow the verifier command so the demo shows no permission prompt, and if so, how narrowly (the verifier only, with or without the error-journal option)? Default now: not pre-allowed; the demo document lists the permission prompt as a planned step, which meets the §6 target «0 unplanned prompts». — owner: AlexanderSW, due: before `/sdd:design check-act-skill` (brief §8)
+- [ ] Should the check-act skill pre-allow the verifier command so the demo shows no permission prompt, and if so, how narrowly (the verifier only, with or without the error-journal option), and in which command form (`act-verifier …` or `.venv/Scripts/python -m act_verifier …`)? Default now: not pre-allowed; the demo document lists the permission prompt as a planned step, which meets the §6 target «0 unplanned prompts». — owner: AlexanderSW, due: before `/sdd:design check-act-skill` (brief §8)
 - [ ] Will the employer reviewer run the skill themselves, or only watch the demo? Default now: the README section covers calling the skill from this repository only, with no install steps for another machine. — owner: AlexanderSW, due: before the README section is written at `/sdd:implement check-act-skill` (brief §8)
 - [ ] What happens to the owner's draft `docs/features/check-act-skill/SKILL.md` once the real check-act skill exists? Default now: keep it as history, marked as superseded by the real skill, so it is not read as a second live copy. — owner: AlexanderSW, due: at `/sdd:implement check-act-skill` (brief §8; the two empty copies listed there are already gone)
