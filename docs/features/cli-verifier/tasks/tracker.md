@@ -22,5 +22,12 @@
 | T12 | Implement cli.main | ports | AlexanderSW | M | T6, T8, T9, T10 | done | COMMIT |
 | T13 | Add command-level tests | tests | AlexanderSW | M | T3, T12 | done | COMMIT |
 | T14 | Update docs/checks.md with the spec's rules | docs | AlexanderSW | S | — | done | COMMIT |
+| T15 | Show the previous-acts completeness reason in the evidence block | domain | AlexanderSW | S | — | todo | — |
+| T16 | Refuse abbreviated option names with outcome code 3 | ports | AlexanderSW | S | — | todo | — |
+| T17 | Cite the КБ-2в sheet title as found, not the literal «КБ-2в» | domain | AlexanderSW | S | T15 | todo | — |
+| T18 | Assert the test run leaves the tracked journal unchanged instead of empty | tests | AlexanderSW | S | — | todo | — |
+| T19 | Map the remaining argparse errors to Ukrainian messages naming the option | ports | AlexanderSW | S | T16 | todo | — |
+| T20 | Assert expected and actual values of the three combo fails | tests | AlexanderSW | S | — | todo | — |
+| T21 | Align ContractPosition types and record the duplicate-code rule | docs | AlexanderSW | S | T17 | todo | — |
 
-**Total:** 14 tasks, ~5 person-days (S ≈ 0.25 d, M ≈ 0.5 d).
+**Total:** 21 tasks (T15–T21: review follow-ups), ~6.75 person-days (S ≈ 0.25 d, M ≈ 0.5 d).

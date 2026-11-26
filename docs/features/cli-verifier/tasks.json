@@ -296,6 +296,133 @@
       ],
       "file": "docs/features/cli-verifier/tasks/t14-checks-catalog-docs.md",
       "status": "done"
+    },
+    {
+      "id": "T15",
+      "title": "Show the previous-acts completeness reason in the evidence block",
+      "layer": "domain",
+      "deps": [],
+      "acs": [
+        "AC-03",
+        "AC-11"
+      ],
+      "files_hint": [
+        "src/act_verifier/checks.py",
+        "src/act_verifier/report.py",
+        "tests/test_checks.py",
+        "tests/test_report.py",
+        "tests/test_verifier.py",
+        "tests/test_cli.py"
+      ],
+      "dod": "on `incomplete_previous` the evidence block on stdout names «подано попередніх актів: 1 з 2» for C05 and C13",
+      "file": "docs/features/cli-verifier/tasks/t15-evidence-incomplete-previous.md",
+      "status": "todo"
+    },
+    {
+      "id": "T16",
+      "title": "Refuse abbreviated option names with outcome code 3",
+      "layer": "ports",
+      "deps": [],
+      "acs": [
+        "AC-06"
+      ],
+      "files_hint": [
+        "src/act_verifier/cli.py",
+        "tests/test_cli.py",
+        "tests/test_cli_unit.py"
+      ],
+      "dod": "`--contr …` exits 3 with the option named on stderr; no report written",
+      "file": "docs/features/cli-verifier/tasks/t16-no-abbreviated-options.md",
+      "status": "todo"
+    },
+    {
+      "id": "T17",
+      "title": "Cite the КБ-2в sheet title as found, not the literal «КБ-2в»",
+      "layer": "domain",
+      "deps": [
+        "T15"
+      ],
+      "acs": [
+        "AC-03",
+        "AC-09"
+      ],
+      "files_hint": [
+        "src/act_verifier/models.py",
+        "src/act_verifier/loaders.py",
+        "src/act_verifier/checks.py",
+        "tests/test_loaders.py",
+        "tests/test_checks.py"
+      ],
+      "dod": "an act whose sheet is «КБ-2в акт 3» is cited with that title in every source and in skipped rows",
+      "file": "docs/features/cli-verifier/tasks/t17-sheet-title-as-found.md",
+      "status": "todo"
+    },
+    {
+      "id": "T18",
+      "title": "Assert the test run leaves the tracked journal unchanged instead of empty",
+      "layer": "tests",
+      "deps": [],
+      "acs": [
+        "AC-14"
+      ],
+      "files_hint": [
+        "tests/test_cli.py",
+        "tests/conftest.py"
+      ],
+      "dod": "suite stays green with extra lines in `journal/agent_errors.csv`; a test that wrote to it would still fail",
+      "file": "docs/features/cli-verifier/tasks/t18-tracked-journal-test.md",
+      "status": "todo"
+    },
+    {
+      "id": "T19",
+      "title": "Map the remaining argparse errors to Ukrainian messages naming the option",
+      "layer": "ports",
+      "deps": [
+        "T16"
+      ],
+      "acs": [
+        "AC-06"
+      ],
+      "files_hint": [
+        "src/act_verifier/cli.py",
+        "tests/test_cli_unit.py"
+      ],
+      "dod": "no English argparse text reaches stderr for the known argparse message shapes",
+      "file": "docs/features/cli-verifier/tasks/t19-ukrainian-invocation-messages.md",
+      "status": "todo"
+    },
+    {
+      "id": "T20",
+      "title": "Assert expected and actual values of the three combo fails",
+      "layer": "tests",
+      "deps": [],
+      "acs": [
+        "AC-02"
+      ],
+      "files_hint": [
+        "tests/test_checks.py",
+        "tests/test_verifier.py"
+      ],
+      "dod": "a wrong expected/actual on any of the three combo fails turns a test red",
+      "file": "docs/features/cli-verifier/tasks/t20-combo-expected-actual.md",
+      "status": "todo"
+    },
+    {
+      "id": "T21",
+      "title": "Align ContractPosition types and record the duplicate-code rule",
+      "layer": "docs",
+      "deps": [
+        "T17"
+      ],
+      "acs": [],
+      "files_hint": [
+        "src/act_verifier/models.py",
+        "docs/features/cli-verifier/data-model.md",
+        "docs/checks.md"
+      ],
+      "dod": "types match what the loader stores; the duplicate-code rule appears in both documents",
+      "file": "docs/features/cli-verifier/tasks/t21-model-doc-drift.md",
+      "status": "todo"
     }
   ]
 }
