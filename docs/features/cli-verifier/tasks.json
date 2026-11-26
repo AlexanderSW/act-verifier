@@ -457,7 +457,7 @@
       ],
       "dod": "the command prints the code-wording message, exits 3, writes no report",
       "file": "docs/features/cli-verifier/tasks/t23-duplicate-code-message.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T24",

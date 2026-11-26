@@ -101,7 +101,7 @@ def load_contract(path: Path) -> dict[str, ContractPosition]:
         dups = {c: rows for c, rows in rows_by_code.items() if len(rows) > 1}
         if dups:
             code, rows = next(iter(dups.items()))
-            raise InputError("ambiguous_label", label=code, file=file, sheet=ws.title, rows=rows)
+            raise InputError("duplicate_code", label=code, file=file, sheet=ws.title, rows=rows)
         return out
 
 

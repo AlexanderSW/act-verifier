@@ -135,6 +135,24 @@ def test_ambiguous_label_names_rows(tmp_path, capsys):
     assert "ПДВ" in err and "21" in err and "24" in err
 
 
+def test_duplicate_contract_code_is_named_as_a_code(tmp_path, capsys):
+    """Повтор шифру в договорі — не «підпис» і не «перший збіг» (docs/checks.md; review 2, finding 2)."""
+    from openpyxl import load_workbook
+    wb = load_workbook(CONTRACT)
+    ws = wb["Договірна ціна"]
+    assert (ws.cell(7, 2).value, ws.cell(8, 2).value) == ("2-1", "2-2")
+    ws.cell(8, 2).value = "2-1"
+    dup = tmp_path / "contract_dup.xlsx"
+    wb.save(dup)
+    out = tmp_path / "r"
+    assert main(argv(out, contract=dup)) == 3
+    err = capsys.readouterr().err
+    assert ("файл contract_dup.xlsx, аркуш «Договірна ціна»: шифр «2-1» повторюється в рядках 7, 8; "
+            "не береться ні перший, ні останній рядок.") in err
+    assert "підпис" not in err and "перший збіг" not in err
+    assert files(out) == []
+
+
 # ---------------------------------------------------------------- захист входів (AC-13)
 def test_journal_equal_to_act_in_other_case_is_refused(tmp_path, capsys):
     act = tmp_path / "in" / "act_03.xlsx"

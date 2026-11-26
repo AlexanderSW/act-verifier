@@ -87,6 +87,9 @@ def _message(e: InputError) -> str:
             return f"{where}: не знайдено аркуш «{e.label}»."
         return f"{where}, аркуш «{e.sheet}»: не знайдено підпис «{e.label}»."
     rows = ", ".join(map(str, e.rows))
+    if e.kind == "duplicate_code":
+        return (f"{where}, аркуш «{e.sheet}»: шифр «{e.label}» повторюється в рядках {rows}; "
+                "не береться ні перший, ні останній рядок.")
     if e.label == e.sheet or not e.rows:
         return f"{where}: підпис «{e.label}» неоднозначний ({e.sheet}); перший збіг не використовується."
     return (f"{where}, аркуш «{e.sheet}»: підпис «{e.label}» знайдено в кількох рядках ({rows}); "

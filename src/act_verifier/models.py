@@ -14,7 +14,7 @@ class InputError(Exception):
     """
 
     KINDS = frozenset({
-        "missing_label", "ambiguous_label", "unreadable_file", "invocation", "overwrite_refused",
+        "missing_label", "ambiguous_label", "duplicate_code", "unreadable_file", "invocation", "overwrite_refused",
     })
 
     def __init__(

@@ -134,7 +134,7 @@ reaches a store; outcome code 3 means no report is written (spec AC-06/07/08/13)
 
 **Aggregate root:** the contract map.
 **Access patterns:** `contract[code]` per act row → C01–C05.
-**Constraints:** a duplicate code in the contract is an input error (outcome code 3, `InputError("ambiguous_label")` naming the code and the competing rows) — neither the first nor the last row is used (decided in implement, recorded after review 2026-11-26, finding 7). An empty `qty`/`price` cell is read as `None` (missing data, not an input error) — resolves audit drift item D5.
+**Constraints:** a duplicate code in the contract is an input error (outcome code 3, `InputError("duplicate_code")` naming the code and the competing rows) — neither the first nor the last row is used (decided in implement, recorded after review 2026-11-26, finding 7; own kind since review 2, finding 2 — ADR-0002 amendment). An empty `qty`/`price` cell is read as `None` (missing data, not an input error) — resolves audit drift item D5.
 
 ### `Act`
 

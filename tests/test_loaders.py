@@ -89,7 +89,7 @@ def test_load_contract_duplicate_code_is_not_silently_resolved(tmp_path):
     path = _contract_file(tmp_path, HEADERS, [(1, "2-1", "A", "м²", 10, 5, 50), (2, "2-1", "B", "м²", 3, 5, 15)])
     with pytest.raises(InputError) as e:
         load_contract(path)
-    assert e.value.kind == "ambiguous_label" and e.value.label == "2-1" and e.value.rows == [7, 8]
+    assert (e.value.kind, e.value.label, e.value.sheet, e.value.rows) == ("duplicate_code", "2-1", "Договірна ціна", [7, 8])
 
 
 def test_load_contract_corrupt_file(tmp_path):

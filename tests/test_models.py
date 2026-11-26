@@ -26,9 +26,9 @@ def test_input_error_rows_default_empty():
     assert e.rows == []
 
 
-def test_input_error_kinds_are_the_five():
+def test_input_error_kinds_are_the_six():
     assert InputError.KINDS == {
-        "missing_label", "ambiguous_label", "unreadable_file", "invocation", "overwrite_refused",
+        "missing_label", "ambiguous_label", "duplicate_code", "unreadable_file", "invocation", "overwrite_refused",
     }
 
 

@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/models.py", "src/act_verifier/loaders.py", "src/a
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T23 — Name a duplicated contract code as a code, with its own InputError kind
