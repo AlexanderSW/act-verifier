@@ -471,6 +471,56 @@
       "dod": "the Act table matches models.py",
       "file": "docs/features/cli-verifier/tasks/t24-act-sheet-in-data-model.md",
       "status": "done"
+    },
+    {
+      "id": "T25",
+      "title": "List every missing-data unknown under «Не перевірено» with its reason",
+      "layer": "domain",
+      "deps": [],
+      "acs": [
+        "AC-03",
+        "AC-05"
+      ],
+      "files_hint": [
+        "src/act_verifier/checks.py",
+        "tests/test_checks.py",
+        "tests/test_verifier.py",
+        "tests/test_cli.py"
+      ],
+      "dod": "every missing-data unknown has a Skipped with the same reason; tests green",
+      "file": "docs/features/cli-verifier/tasks/t25-skip-reason-for-missing-data.md",
+      "status": "todo"
+    },
+    {
+      "id": "T26",
+      "title": "No act number when the КБ-2в header is in row 1",
+      "layer": "infra",
+      "deps": [],
+      "acs": [
+        "AC-11"
+      ],
+      "files_hint": [
+        "src/act_verifier/loaders.py",
+        "tests/test_loaders.py"
+      ],
+      "dod": "header in row 1 gives number None; test green",
+      "file": "docs/features/cli-verifier/tasks/t26-act-number-header-row-1.md",
+      "status": "todo"
+    },
+    {
+      "id": "T27",
+      "title": "Align the ER diagram, the sync report and the cli.md changelog with the review-2 changes",
+      "layer": "docs",
+      "deps": [],
+      "acs": [],
+      "files_hint": [
+        "docs/features/cli-verifier/data-model.md",
+        "docs/features/cli-verifier/contracts/api-sync-report.md",
+        "docs/features/cli-verifier/contracts/cli.md"
+      ],
+      "dod": "docs match models.py and loaders.py",
+      "file": "docs/features/cli-verifier/tasks/t27-docs-after-review-2.md",
+      "status": "todo"
     }
   ]
 }

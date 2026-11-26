@@ -32,5 +32,8 @@
 | T22 | Pin the empty contract quantity/price rule with tests | tests | AlexanderSW | S | — | done | COMMIT |
 | T23 | Name a duplicated contract code as a code, with its own InputError kind | infra | AlexanderSW | S | — | done | COMMIT |
 | T24 | List Act.sheet in data-model.md | docs | AlexanderSW | S | — | done | COMMIT |
+| T25 | List every missing-data unknown under «Не перевірено» with its reason | domain | AlexanderSW | S | — | todo | SELECT |
+| T26 | No act number when the КБ-2в header is in row 1 | infra | AlexanderSW | S | — | todo | SELECT |
+| T27 | Align the ER diagram, the sync report and the cli.md changelog with the review-2 changes | docs | AlexanderSW | S | — | todo | SELECT |
 
-**Total:** 24 tasks (T15–T21, T22–T24: review follow-ups), ~7.5 person-days (S ≈ 0.25 d, M ≈ 0.5 d).
+**Total:** 27 tasks (T15–T21, T22–T24, T25–T27: review follow-ups), ~8.25 person-days (S ≈ 0.25 d, M ≈ 0.5 d).
