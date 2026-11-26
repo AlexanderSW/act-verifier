@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|---|---|
 | T1 | Extend models with InputError, Skipped and per-value provenance | domain | AlexanderSW | S | — | done | COMMIT |
 | T2 | Add layout map, expected_error and four layout scenarios to the generator | tests | AlexanderSW | M | — | done | COMMIT |
-| T3 | Add empty-quantity, empty-amount and incomplete-previous-acts scenarios | tests | AlexanderSW | S | T2 | todo | — |
+| T3 | Add empty-quantity, empty-amount and incomplete-previous-acts scenarios | tests | AlexanderSW | S | T2 | done | COMMIT |
 | T4 | Implement the layout helper | infra | AlexanderSW | S | T1 | todo | — |
 | T5 | Implement load_contract and the shared cell readers | infra | AlexanderSW | S | T1, T4 | todo | — |
 | T6 | Implement load_act | infra | AlexanderSW | M | T2, T5 | todo | — |

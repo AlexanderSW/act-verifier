@@ -1,0 +1,20 @@
+{
+  "scenario": "empty_quantity",
+  "description": "Позиція 2-4: клітинка кількості порожня, ціна й вартість заповнені. C04 і C05 не перевіряються, C11 unknown.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/empty_quantity/act_03.xlsx"
+  },
+  "expected_verdict": "needs_review",
+  "expected_findings": [
+    {
+      "code": "2-4",
+      "check": "C11_required_values_present",
+      "status": "unknown"
+    }
+  ]
+}

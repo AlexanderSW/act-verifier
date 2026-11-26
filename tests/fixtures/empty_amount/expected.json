@@ -1,0 +1,25 @@
+{
+  "scenario": "empty_amount",
+  "description": "Позиція 3-3: клітинка вартості порожня. C04 не перевіряється, C11 unknown, C07 unknown (бракує вартості 3-3), хоч «Разом» = Σ заповнених.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx",
+      "data/synthetic/act_02_2026-10.xlsx"
+    ],
+    "act": "tests/fixtures/empty_amount/act_03.xlsx"
+  },
+  "expected_verdict": "needs_review",
+  "expected_findings": [
+    {
+      "code": "3-3",
+      "check": "C11_required_values_present",
+      "status": "unknown"
+    },
+    {
+      "code": null,
+      "check": "C07_subtotal",
+      "status": "unknown"
+    }
+  ]
+}

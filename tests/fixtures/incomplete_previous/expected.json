@@ -1,0 +1,74 @@
+{
+  "scenario": "incomplete_previous",
+  "description": "Акт №3, але з попередніх подано лише акт №1 (1 з 2). C05 усіх позицій і C13 unknown; решта перевірок pass.",
+  "inputs": {
+    "contract": "data/synthetic/contract_boq.xlsx",
+    "previous_acts": [
+      "data/synthetic/act_01_2026-09.xlsx"
+    ],
+    "act": "tests/fixtures/incomplete_previous/act_03.xlsx"
+  },
+  "expected_verdict": "needs_review",
+  "expected_findings": [
+    {
+      "code": "2-1",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "2-2",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "2-3",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "2-4",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "2-5",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "3-1",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "3-2",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "3-3",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "4-1",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "5-1",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": "5-2",
+      "check": "C05_within_remaining_volume",
+      "status": "unknown"
+    },
+    {
+      "code": null,
+      "check": "C13_kb3_cumulative",
+      "status": "unknown"
+    }
+  ]
+}

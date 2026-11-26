@@ -422,6 +422,26 @@ def scenarios(prev_cum: Decimal):
                 act, [],
                 {"write": {"extra_label": ("ПДВ (довідково), грн", act.vat)},
                  "expected_error": {"kind": "ambiguous_label", "label": "ПДВ"}}))
+
+    # 19–21. Бракує даних (AC-05, AC-11): unknown, ніколи не pass
+    act = base_act3(prev_cum)
+    find(act.rows, "2-4").qty = None  # ціна й вартість лишились
+    out.append(("empty_quantity", "Позиція 2-4: клітинка кількості порожня, ціна й вартість заповнені. C04 і C05 не перевіряються, C11 unknown.",
+                act, [{"code": "2-4", "check": "C11_required_values_present", "status": "unknown"}]))
+
+    act = base_act3(prev_cum)
+    find(act.rows, "3-3").amount = None
+    act = finalize(3, act.period, act.rows, prev_cum)  # підсумки = Σ заповнених вартостей
+    out.append(("empty_amount", "Позиція 3-3: клітинка вартості порожня. C04 не перевіряється, C11 unknown, C07 unknown (бракує вартості 3-3), хоч «Разом» = Σ заповнених.",
+                act, [{"code": "3-3", "check": "C11_required_values_present", "status": "unknown"},
+                      {"code": None, "check": "C07_subtotal", "status": "unknown"}]))
+
+    act = base_act3(prev_cum)
+    out.append(("incomplete_previous", "Акт №3, але з попередніх подано лише акт №1 (1 з 2). C05 усіх позицій і C13 unknown; решта перевірок pass.",
+                act,
+                [{"code": r.code, "check": "C05_within_remaining_volume", "status": "unknown"} for r in act.rows]
+                + [{"code": None, "check": "C13_kb3_cumulative", "status": "unknown"}],
+                {"previous_acts": ["data/synthetic/act_01_2026-09.xlsx"]}))
     return out
 
 

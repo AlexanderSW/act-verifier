@@ -160,3 +160,48 @@ def test_ambiguous_label_fixture_has_two_rows():
     sdir = _by_name()["ambiguous_label"]
     label = load_expected(sdir)["expected_error"]["label"]
     assert len([r for r, t in _kb2v_labels(sdir) if t.startswith(_norm(label))]) >= 2
+
+
+DATA_SCENARIOS = {"empty_quantity", "empty_amount", "incomplete_previous"}
+
+
+def _act_rows_by_code(sdir):
+    exp = load_expected(sdir)
+    rows, totals = read_act_totals(ROOT / exp["inputs"]["act"], exp.get("layout", {}).get("act"))
+    return {r[1]: r for r in rows}, totals
+
+
+def test_data_scenarios_present():
+    assert DATA_SCENARIOS <= set(_by_name())
+
+
+def test_empty_quantity_fixture():
+    sdir = _by_name()["empty_quantity"]
+    exp = load_expected(sdir)
+    code = exp["expected_findings"][0]["code"]
+    rows, _ = _act_rows_by_code(sdir)
+    assert rows[code][4] is None and rows[code][5] is not None and rows[code][6] is not None
+    assert exp["expected_findings"] == [{"code": code, "check": "C11_required_values_present", "status": "unknown"}]
+    assert exp["expected_verdict"] == "needs_review"
+
+
+def test_empty_amount_fixture_totals_are_sum_of_filled_amounts():
+    sdir = _by_name()["empty_amount"]
+    exp = load_expected(sdir)
+    rows, totals = _act_rows_by_code(sdir)
+    empty = [c for c, r in rows.items() if r[6] is None]
+    assert len(empty) == 1
+    assert sum(d(r[6]) for r in rows.values() if r[6] is not None) == totals["Разом без ПДВ"]
+    assert {(f["code"], f["check"], f["status"]) for f in exp["expected_findings"]} == {
+        (empty[0], "C11_required_values_present", "unknown"), (None, "C07_subtotal", "unknown")}
+    assert exp["expected_verdict"] == "needs_review"
+
+
+def test_incomplete_previous_fixture():
+    sdir = _by_name()["incomplete_previous"]
+    exp = load_expected(sdir)
+    assert len(exp["inputs"]["previous_acts"]) == 1
+    rows, _ = _act_rows_by_code(sdir)
+    assert {(f["code"], f["check"], f["status"]) for f in exp["expected_findings"]} == (
+        {(c, "C05_within_remaining_volume", "unknown") for c in rows} | {(None, "C13_kb3_cumulative", "unknown")})
+    assert exp["expected_verdict"] == "needs_review"
