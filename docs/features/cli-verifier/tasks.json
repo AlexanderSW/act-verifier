@@ -188,7 +188,7 @@
         "tests/test_report.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t09-report-evidence.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T10",
