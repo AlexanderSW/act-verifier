@@ -28,6 +28,6 @@
 | T18 | Assert the test run leaves the tracked journal unchanged instead of empty | tests | AlexanderSW | S | — | done | COMMIT |
 | T19 | Map the remaining argparse errors to Ukrainian messages naming the option | ports | AlexanderSW | S | T16 | done | COMMIT |
 | T20 | Assert expected and actual values of the three combo fails | tests | AlexanderSW | S | — | done | COMMIT |
-| T21 | Align ContractPosition types and record the duplicate-code rule | docs | AlexanderSW | S | T17 | todo | — |
+| T21 | Align ContractPosition types and record the duplicate-code rule | docs | AlexanderSW | S | T17 | done | COMMIT |
 
 **Total:** 21 tasks (T15–T21: review follow-ups), ~6.75 person-days (S ≈ 0.25 d, M ≈ 0.5 d).

@@ -422,7 +422,7 @@
       ],
       "dod": "types match what the loader stores; the duplicate-code rule appears in both documents",
       "file": "docs/features/cli-verifier/tasks/t21-model-doc-drift.md",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

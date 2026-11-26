@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/models.py", "docs/features/cli-verifier/data-mode
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T21 — Align ContractPosition types and record the duplicate-code rule

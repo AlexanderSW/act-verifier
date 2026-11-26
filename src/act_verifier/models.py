@@ -60,8 +60,8 @@ class ContractPosition:
     code: str
     name: str
     unit: str
-    qty: Decimal
-    price: Decimal
+    qty: Decimal | None      # порожня клітинка договору -> None; залежні перевірки дають unknown
+    price: Decimal | None
     source: Source
 
 

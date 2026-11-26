@@ -91,13 +91,13 @@ def load_contract(path: Path) -> dict[str, ContractPosition]:
                 code=code,
                 name=_text(_cell(row, cols["Найменування"])),
                 unit=_text(_cell(row, cols["Од. виміру"])),
-                # Порожня кількість/ціна в договорі не підставляється нулем (data-model D5, відкрите питання):
+                # Порожня кількість/ціна в договорі не підставляється нулем (data-model D5):
                 # None іде далі, а перевірки, яким вона потрібна, дають unknown.
                 qty=_dec(_cell(row, cols["Кількість"])),
                 price=_dec(_cell(row, cols["Ціна"])),
                 source=Source(file, ws.title, r),
             )
-        # Дубль шифру в договорі: не беремо ні перший, ні останній (data-model §ContractPosition TBD).
+        # Дубль шифру в договорі: не беремо ні перший, ні останній -> код 3 (data-model §ContractPosition).
         dups = {c: rows for c, rows in rows_by_code.items() if len(rows) > 1}
         if dups:
             code, rows = next(iter(dups.items()))

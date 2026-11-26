@@ -128,13 +128,13 @@ reaches a store; outcome code 3 means no report is written (spec AC-06/07/08/13)
 | `code` | `str` | key of the contract map; unique | «Шифр»; exact match for C01 (docs/checks.md) |
 | `name` | `str` | | «Найменування» |
 | `unit` | `str` | | «Од. виміру»; compared after `strip()` (C02) |
-| `qty` | `Decimal` | non-null in the current type | «Кількість»; base of C05 remaining volume |
-| `price` | `Decimal` | non-null in the current type | «Ціна»; C03 tolerance 0,00 |
+| `qty` | `Decimal \| None` | `None` = empty cell, never 0 | «Кількість»; base of C05 remaining volume; `None` → C05 `unknown` («у договорі порожня кількість») |
+| `price` | `Decimal \| None` | `None` = empty cell, never 0 | «Ціна»; C03 tolerance 0,00; `None` → C03 `unknown` («у договорі порожня ціна») |
 | `source` | `Source` | required | file / sheet / row actually read (ADR-0003) |
 
 **Aggregate root:** the contract map.
 **Access patterns:** `contract[code]` per act row → C01–C05.
-**Constraints:** a duplicate code in the contract is <!-- TBD: input error or a C-check? spec is silent -->. An empty `qty`/`price` cell cannot be represented by the current non-`Optional` type — see the audit, drift item D5.
+**Constraints:** a duplicate code in the contract is an input error (outcome code 3, `InputError("ambiguous_label")` naming the code and the competing rows) — neither the first nor the last row is used (decided in implement, recorded after review 2026-11-26, finding 7). An empty `qty`/`price` cell is read as `None` (missing data, not an input error) — resolves audit drift item D5.
 
 ### `Act`
 
