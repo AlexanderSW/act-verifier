@@ -23,7 +23,7 @@ The verifier checks any act in a known layout against the contract price and pre
 | 2 | Assistant-agent tool: an agent calls «verify act» and «list checks» and gets the verdict, findings and evidence block | `README.md` § План реалізації (step 5); `src/act_verifier/mcp_server.py` docstring | S | idea |
 | 3 | Deferred layout and data scenarios: numbers written as text, position codes with other hyphens, zero quantity, a cumulative КБ-3 mismatch scenario | `docs/checks.md` § Наступні сценарії; `docs/features/cli-verifier/idea-brief.md` §5 Out of scope | S | idea |
 | 4 | Verify the first real employer act → see [Not yet specified](#not-yet-specified) | `docs/features/cli-verifier/idea-brief.md` §8 Open questions | fog | idea |
-| 5 | check-act skill: the L1 agent runs the verifier at the accepting person's request and explains the verdict, findings and evidence block, never deciding acceptance → [`docs/features/check-act-skill/`](features/check-act-skill/spec.md) | `docs/features/check-act-skill/spec.md` §1 | XS | spec'd |
+| 5 | check-act skill: the L1 agent runs the verifier at the accepting person's request and explains the verdict, findings and evidence block, never deciding acceptance → [`docs/features/check-act-skill/`](features/check-act-skill/spec.md) | `docs/features/check-act-skill/spec.md` §1 | XS | building |
 
 ## Not yet specified
 
