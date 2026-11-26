@@ -1,0 +1,93 @@
+{
+  "slug": "check-act-skill",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Create the check-act skill file with its identity header and the identity drift tests",
+      "layer": "ports",
+      "deps": [],
+      "acs": ["AC-11"],
+      "dod": "Identity tests in tests/test_check_act_skill.py fail naming which of missing file / unreadable header / wrong name / empty description is wrong, were red before .claude/skills/check-act/SKILL.md existed and pass now, with no model, network or subprocess call.",
+      "files_hint": [".claude/skills/check-act/SKILL.md", "tests/test_check_act_skill.py"],
+      "file": "docs/features/check-act-skill/tasks/T1-skill-identity.md",
+      "status": "todo"
+    },
+    {
+      "id": "T2",
+      "title": "Add the outcome-code map and run-command block to the skill, with drift tests against the verifier's own contract",
+      "layer": "ports",
+      "deps": ["T1"],
+      "acs": ["AC-10"],
+      "dod": "Drift tests comparing the skill's code table and single bash block with cli.EXIT, cli.EXIT_INPUT_ERROR, cli._parser() options (minus --help) and the «перевірки не було» token from real cli.main() stderr pass, fail naming the item on any mismatch, and the full suite shows 304 + N passed with CLAUDE.md updated to 304 + N.",
+      "files_hint": [".claude/skills/check-act/SKILL.md", "tests/test_check_act_skill.py", "CLAUDE.md"],
+      "file": "docs/features/check-act-skill/tasks/T2-outcome-map-and-run-command.md",
+      "status": "todo"
+    },
+    {
+      "id": "T3",
+      "title": "Write the skill's run steps: collect inputs, run the verifier, apply the verdict-source rule",
+      "layer": "ports",
+      "deps": ["T2"],
+      "acs": ["AC-01b", "AC-04", "AC-08", "AC-09"],
+      "dod": "Each of AC-01b, AC-04, AC-08, AC-09 maps to a named sentence in SKILL.md «Кроки», and the suite stays at 304 + N passed, 0 failed, 0 xfailed.",
+      "files_hint": [".claude/skills/check-act/SKILL.md"],
+      "file": "docs/features/check-act-skill/tasks/T3-skill-run-steps.md",
+      "status": "todo"
+    },
+    {
+      "id": "T4",
+      "title": "Write the skill's red lines and the five-section reply format for runs with a verdict",
+      "layer": "ports",
+      "deps": ["T3"],
+      "acs": ["AC-01", "AC-02", "AC-02b", "AC-03", "AC-07"],
+      "dod": "Each of AC-01, AC-02, AC-02b, AC-03, AC-07 maps to a named sentence in SKILL.md «Червоні лінії» / «Формат відповіді» with the five fixed headings in order, and the suite stays at 304 + N passed, 0 failed, 0 xfailed.",
+      "files_hint": [".claude/skills/check-act/SKILL.md"],
+      "file": "docs/features/check-act-skill/tasks/T4-skill-reply-format.md",
+      "status": "todo"
+    },
+    {
+      "id": "T5",
+      "title": "Write the skill's no-verification branch: input errors by kind and verifier crashes",
+      "layer": "ports",
+      "deps": ["T3"],
+      "acs": ["AC-05", "AC-05b", "AC-06", "AC-06b"],
+      "dod": "Each of AC-05, AC-05b, AC-06, AC-06b maps to a named sentence in SKILL.md «Перевірки не було» (guess allowed only for label/sheet errors, none for invocation/unreadable/overwrite/duplicate, crash reads no report), and the suite stays at 304 + N passed, 0 failed, 0 xfailed.",
+      "files_hint": [".claude/skills/check-act/SKILL.md"],
+      "file": "docs/features/check-act-skill/tasks/T5-skill-no-verification.md",
+      "status": "todo"
+    },
+    {
+      "id": "T6",
+      "title": "Write the demo script demo.md for the three scenarios, with empty actual-result fields",
+      "layer": "docs",
+      "deps": [],
+      "acs": ["AC-12"],
+      "dod": "docs/features/check-act-skill/demo.md has three scenario sections (ok_many, combo_three_errors, missing_label), each with a prompt naming all four inputs, the expected behaviour, its own reports/demo/<scenario>/ folder and empty actual-result, stopwatch, prompt-count and red-line checklist fields, plus before/after hash tables.",
+      "files_hint": ["docs/features/check-act-skill/demo.md"],
+      "file": "docs/features/check-act-skill/tasks/T6-demo-script.md",
+      "status": "todo"
+    },
+    {
+      "id": "T7",
+      "title": "Add the README section «Агент L1: Skill check-act» and mark the owner's draft skill superseded",
+      "layer": "docs",
+      "deps": [],
+      "acs": ["AC-13"],
+      "dod": "README.md has the section «Агент L1: Skill check-act» (listed in «Зміст») saying how to call the skill from this repository, what the L1 agent does and the four things it does not do, and the draft docs/features/check-act-skill/SKILL.md carries a superseded note.",
+      "files_hint": ["README.md", "docs/features/check-act-skill/SKILL.md"],
+      "file": "docs/features/check-act-skill/tasks/T7-readme-section.md",
+      "status": "todo"
+    },
+    {
+      "id": "T8",
+      "title": "Rehearse the three demo scenarios with the live skill and record the actual results in demo.md",
+      "layer": "tests",
+      "deps": ["T4", "T5", "T6"],
+      "acs": ["AC-12"],
+      "dod": "Manual: all three «Фактичний результат» fields in demo.md hold what the L1 agent actually did (deviations included), input hashes before and after are equal for all 6 inputs, the journal is unchanged in git status, and the red-line checklist is filled per scenario.",
+      "files_hint": ["docs/features/check-act-skill/demo.md"],
+      "file": "docs/features/check-act-skill/tasks/T8-demo-rehearsal.md",
+      "status": "todo"
+    }
+  ]
+}
