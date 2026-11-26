@@ -105,6 +105,11 @@ def test_incomplete_previous_reason():
     report = run_scenario("incomplete_previous")
     msgs = {f.message for f in report.findings if f.status is Status.UNKNOWN}
     assert msgs == {"подано попередніх актів: 1 з 2"}
+    codes = [f.code for f in report.findings if f.check == "C05_within_remaining_volume"]
+    assert len(codes) == 11
+    reason = "подано попередніх актів: 1 з 2"
+    assert (f"Не перевірено: {', '.join(codes)} — C05 ({reason}); акт — C13 ({reason})."
+            in render_evidence(report).splitlines())
 
 
 def test_empty_amount_c07_names_the_position():

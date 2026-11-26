@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/checks.py", "src/act_verifier/report.py", "tests/
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T15 — Show the previous-acts completeness reason in the evidence block

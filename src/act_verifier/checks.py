@@ -101,6 +101,8 @@ def _c05(out: _Out, row: ActRow, pos: ContractPosition, previous_acts: list[Act]
         unknown = "у договорі порожня кількість"
     if unknown:
         out.add(C05, Status.UNKNOWN, row, actual=row.qty, message=unknown, sources=sources)
+        if completeness:  # причина потрапляє в «Не перевірено» блоку доказів (AC-03, AC-11)
+            out.skip(C05, row, completeness)
         return
     remaining = pos.qty - used
     status = Status.PASS if row.qty <= remaining else Status.FAIL
@@ -217,6 +219,7 @@ def _compare(check, act: Act, keys, expected: Decimal, actual: Decimal, extra=()
 def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> tuple[list[Finding], list[Skipped]]:
     """C07–C10, C12, C13 — у порядку ID. Порожній операнд -> unknown з назвою значення."""
     out: list[Finding] = []
+    skipped: list[Skipped] = []
 
     # C07 — «Разом без ПДВ» = Σ вартостей рядків
     no_amount = [r.code for r in act.rows if r.amount is None]
@@ -261,6 +264,7 @@ def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> t
     if completeness:
         out.append(_act_finding(C13, Status.UNKNOWN, act, keys, actual=act.kb3_cumulative_total,
                                 message=completeness, extra=prev_sources))
+        skipped.append(Skipped(C13, None, completeness))
     else:
         empty = [f"«Всього з ПДВ» попереднього акта {p.file}" for p in previous_acts if p.total is None]
         empty += _empty_values(act, keys)
@@ -270,7 +274,7 @@ def check_act(act: Act, previous_acts: list[Act], completeness: str | None) -> t
         else:
             expected = sum((p.total for p in previous_acts), Decimal(0)) + act.total
             out.append(_compare(C13, act, keys, expected, act.kb3_cumulative_total, extra=prev_sources))
-    return out, []
+    return out, skipped
 
 
 def _act_inputs(a: Act) -> list[Source]:

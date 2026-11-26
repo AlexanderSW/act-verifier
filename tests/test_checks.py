@@ -198,7 +198,9 @@ def test_incomplete_previous_makes_c05_unknown_for_every_position_other_checks_r
         f = by(findings, code, C05)
         assert (f.status, f.message) == (Status.UNKNOWN, "подано попередніх актів: 1 з 2")
         assert all(by(findings, code, c).status is Status.PASS for c in (C01, C02, C03, C04, C06, C11))
-    assert skipped == []
+    # причина потрапляє і в «Не перевірено» блоку доказів (AC-03, AC-11; review finding 1)
+    assert skipped == [Skipped(C05, "2-1", "подано попередніх актів: 1 з 2"),
+                       Skipped(C05, "2-2", "подано попередніх актів: 1 з 2")]
 
 
 # ---------------------------------------------------------------- порядок і Decimal
@@ -333,8 +335,10 @@ def test_c13_cumulative_tolerance():
 
 
 def test_c13_unknown_on_incomplete_previous():
-    f = act_by(act_run(full_act(), previous=prev_with_totals()[:1])[0], C13)
+    findings, skipped = act_run(full_act(), previous=prev_with_totals()[:1])
+    f = act_by(findings, C13)
     assert (f.status, f.message) == (Status.UNKNOWN, "подано попередніх актів: 1 з 2")
+    assert skipped == [Skipped(C13, None, "подано попередніх актів: 1 з 2")]
 
 
 def test_c13_unknown_on_empty_previous_total_names_file():

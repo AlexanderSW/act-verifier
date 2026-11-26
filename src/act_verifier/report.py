@@ -97,14 +97,17 @@ def render_evidence(report: Report) -> str:
         f"{m} {_plural(m, CHECK)} підсумків (виконано перевірок: {len(report.findings)}).",
     ]
 
-    groups: dict[tuple[str | None, str], list[str]] = {}
+    per_code: dict[tuple[str | None, str], list[str]] = {}
     for s in report.skipped:
-        ids = groups.setdefault((s.code, s.reason), [])
+        ids = per_code.setdefault((s.code, s.reason), [])
         if _short(s.check) not in ids:
             ids.append(_short(s.check))
+    # позиції з тими самими перевірками й причиною — одним пунктом: «2-1, 2-2 — C05 (…)»
+    groups: dict[tuple[tuple[str, ...], str], list[str]] = {}
+    for (code, reason), ids in per_code.items():
+        groups.setdefault((tuple(ids), reason), []).append(code if code is not None else "акт")
     if groups:
-        items = [f"{code if code is not None else 'акт'} — {', '.join(ids)} ({reason})"
-                 for (code, reason), ids in groups.items()]
+        items = [f"{', '.join(codes)} — {', '.join(ids)} ({reason})" for (ids, reason), codes in groups.items()]
         lines.append("Не перевірено: " + "; ".join(items) + ".")
     else:
         lines.append("Не перевірено: —")

@@ -67,6 +67,15 @@ def test_scenario_outcome_code(sdir, tmp_path):
     assert not (tmp_path / "journal").exists()  # без --journal журнал не пишеться
 
 
+def test_incomplete_previous_reason_reaches_stdout(tmp_path):
+    exp = load_expected(ROOT / "tests/fixtures/incomplete_previous")
+    res = run(scenario_args(exp, tmp_path / "r"), tmp_path)
+    assert res.returncode == 2
+    line = next(l for l in res.stdout.splitlines() if l.startswith("Не перевірено:"))
+    assert "— C05 (подано попередніх актів: 1 з 2)" in line
+    assert line.endswith("акт — C13 (подано попередніх актів: 1 з 2).")
+
+
 # ---------------------------------------------------------------- незмінність входів (AC-13)
 @pytest.mark.parametrize("scenario,code", [("ok_many", 0), ("combo_three_errors", 1), ("missing_price", 2),
                                            ("missing_label", 3)])

@@ -316,7 +316,7 @@
       ],
       "dod": "on `incomplete_previous` the evidence block on stdout names «подано попередніх актів: 1 з 2» for C05 and C13",
       "file": "docs/features/cli-verifier/tasks/t15-evidence-incomplete-previous.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T16",
