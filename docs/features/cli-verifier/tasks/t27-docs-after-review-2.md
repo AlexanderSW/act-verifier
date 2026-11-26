@@ -9,8 +9,8 @@ files_hint: ["docs/features/cli-verifier/data-model.md", "docs/features/cli-veri
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "SELECT"
+status: "done"
+step: "COMMIT"
 ---
 
 # T27 — Align the ER diagram, the sync report and the cli.md changelog with the review-2 changes

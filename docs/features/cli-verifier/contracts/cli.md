@@ -277,3 +277,9 @@ Nothing is written, and `act_example.xlsx` is byte-for-byte unchanged.
 - The stage-2 assistant tool (roadmap step 2) reuses `load_contract`, `load_act` and `verify`, not this
   command (sad §2). This contract does not bind it.
 - `contract_version` is bumped only by the owner, with a changelog line.
+
+## Changelog
+
+- 2026-11-26 (Draft, `contract_version` unchanged at 0.1.0; a bump is the owner's call): §4 gains the
+  `InputError.kind` value `duplicate_code` (ADR-0002 amendment, review 2 finding 2). Before, a repeated
+  contract «Шифр» was reported as `ambiguous_label`.

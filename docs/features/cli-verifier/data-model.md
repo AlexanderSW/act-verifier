@@ -34,8 +34,8 @@ erDiagram
         str code PK
         str name
         str unit
-        Decimal qty
-        Decimal price
+        Decimal qty "nullable"
+        Decimal price "nullable"
     }
     ACT {
         int number "nullable"
@@ -46,6 +46,7 @@ erDiagram
         Decimal kb3_period_total "nullable"
         Decimal kb3_cumulative_total "nullable"
         str file
+        str sheet "as found, ADR-0003"
         int header_row "new, ADR-0003"
     }
     ACT_ROW {

@@ -520,7 +520,7 @@
       ],
       "dod": "docs match models.py and loaders.py",
       "file": "docs/features/cli-verifier/tasks/t27-docs-after-review-2.md",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

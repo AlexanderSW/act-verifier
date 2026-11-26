@@ -34,6 +34,6 @@
 | T24 | List Act.sheet in data-model.md | docs | AlexanderSW | S | — | done | COMMIT |
 | T25 | List every missing-data unknown under «Не перевірено» with its reason | domain | AlexanderSW | S | — | done | COMMIT |
 | T26 | No act number when the КБ-2в header is in row 1 | infra | AlexanderSW | S | — | done | COMMIT |
-| T27 | Align the ER diagram, the sync report and the cli.md changelog with the review-2 changes | docs | AlexanderSW | S | — | todo | SELECT |
+| T27 | Align the ER diagram, the sync report and the cli.md changelog with the review-2 changes | docs | AlexanderSW | S | — | done | COMMIT |
 
 **Total:** 27 tasks (T15–T21, T22–T24, T25–T27: review follow-ups), ~8.25 person-days (S ≈ 0.25 d, M ≈ 0.5 d).
