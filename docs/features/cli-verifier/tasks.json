@@ -82,7 +82,7 @@
         "tests/test_layout.py"
       ],
       "file": "docs/features/cli-verifier/tasks/t04-layout-helper.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T5",
