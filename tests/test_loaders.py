@@ -239,6 +239,31 @@ def test_act_number(tmp_path, title, number):
     assert ("number" in act.sources) == (title is not None)
 
 
+def test_header_in_row_1_has_no_act_number_even_if_one_is_written_below(tmp_path):
+    """AC-11: номер — лише з заголовка НАД таблицею. Шапка в рядку 1 -> над нею нічого -> None (review 3, finding 2)."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "КБ-2в"
+    for c, h in enumerate(ACT_HEADERS, 1):
+        ws.cell(1, c, h)
+    for c, v in enumerate([1, "2-1", "Монтаж", "м²", 10, 5, 50], 1):
+        ws.cell(2, c, v)
+    for r, (label, value) in enumerate([("Разом без ПДВ", 50), ("ПДВ 20%", 10), ("Всього з ПДВ", 60)], 3):
+        ws.cell(r, 3, label)
+        ws.cell(r, 7, value)
+    ws["A7"] = "Акт № 7 погоджено"  # під таблицею — не заголовок акта
+    k = wb.create_sheet("КБ-3")
+    for i, (label, value) in enumerate([("Вартість робіт за звітний період", 50), ("ПДВ", 10),
+                                        ("Всього за звітний період", 60), ("З початку виконання робіт", 160)], 5):
+        k.cell(i, 1, label)
+        k.cell(i, 2, value)
+    path = tmp_path / "act.xlsx"
+    wb.save(path)
+    act = load_act(path)
+    assert act.header_row == 1 and [r.code for r in act.rows] == ["2-1"]
+    assert act.number is None and "number" not in act.sources
+
+
 def test_empty_value_cell_is_missing_data_not_error(tmp_path):
     path = _act_file(tmp_path, totals=[("Разом без ПДВ", 50), ("ПДВ 20%", None), ("Всього з ПДВ", 60)],
                      kb3_items=[("Вартість робіт за звітний період", 50), ("ПДВ", 10),

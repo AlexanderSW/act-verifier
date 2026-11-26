@@ -116,6 +116,8 @@ def _act_number(ws, header: int, file: str, sources: dict[str, Source]) -> tuple
 
     Немає заголовка або в ньому немає числа — брак даних (None), не помилка вхідних даних (AC-11).
     """
+    if header <= 1:  # над шапкою рядків немає; max_row=0 openpyxl читає як «без межі»
+        return None, None
     hit = find_optional_label_row(ws, "Акт №", max_row=header - 1)
     if hit is None:
         return None, None

@@ -9,8 +9,8 @@ files_hint: ["src/act_verifier/loaders.py", "tests/test_loaders.py"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "SELECT"
+status: "done"
+step: "COMMIT"
 ---
 
 # T26 — No act number when the КБ-2в header is in row 1

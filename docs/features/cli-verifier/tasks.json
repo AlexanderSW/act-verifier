@@ -505,7 +505,7 @@
       ],
       "dod": "header in row 1 gives number None; test green",
       "file": "docs/features/cli-verifier/tasks/t26-act-number-header-row-1.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T27",
