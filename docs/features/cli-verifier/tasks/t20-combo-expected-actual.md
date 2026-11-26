@@ -9,8 +9,8 @@ files_hint: ["tests/test_checks.py", "tests/test_verifier.py"]
 owner: "AlexanderSW"
 estimate: "S"
 context_budget: "S"
-status: "todo"
-step: "—"
+status: "done"
+step: "COMMIT"
 ---
 
 # T20 — Assert expected and actual values of the three combo fails

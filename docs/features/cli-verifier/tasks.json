@@ -405,7 +405,7 @@
       ],
       "dod": "a wrong expected/actual on any of the three combo fails turns a test red",
       "file": "docs/features/cli-verifier/tasks/t20-combo-expected-actual.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T21",

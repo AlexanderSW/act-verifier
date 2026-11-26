@@ -101,6 +101,21 @@ def test_volume_overrun_c05_numbers_and_sources():
     assert {"contract_boq.xlsx", "act_01_2026-09.xlsx", "act_02_2026-10.xlsx"} <= files
 
 
+def test_combo_three_errors_expected_and_actual():
+    """AC-02: усі три fail — з очікуваним і фактичним значенням, як у файлах фікстури.
+
+    3-2: договір 4800, акт 5100; 2-1: залишок 1200 − 410,5 − 455 = 334,5, акт 350;
+    КБ-3 «Всього за звітний період» 872966,4 проти КБ-2в «Всього з ПДВ» 870566,4.
+    """
+    report = run_scenario("combo_three_errors")
+    fails = {(f.code, f.check): (f.expected, f.actual) for f in report.findings if f.status is Status.FAIL}
+    assert fails == {
+        ("3-2", "C03_price_matches_contract"): ("4800", "5100"),
+        ("2-1", "C05_within_remaining_volume"): ("334.5", "350"),
+        (None, "C10_kb3_matches_kb2v"): ("870566.4", "872966.4"),
+    }
+
+
 def test_incomplete_previous_reason():
     report = run_scenario("incomplete_previous")
     msgs = {f.message for f in report.findings if f.status is Status.UNKNOWN}

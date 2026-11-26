@@ -377,8 +377,9 @@ def test_verify_combo_does_not_stop_at_first_error():
     rows = [row("2-1", "1199", "485", "581515", r=9), row("5-2", "6", "9700", "58200", unit="шт", r=10)]
     a = full_act(rows=rows, subtotal="639715", vat="127943", total="767658", kb3p="770058")
     rep = verify(a, CONTRACT, prev_with_totals())
-    assert {(f.code, f.check) for f in rep.findings if f.status is Status.FAIL} == {
-        ("2-1", C05), ("5-2", C03), (None, C10)}
+    # кожна з трьох — з очікуваним і фактичним значенням (AC-02)
+    assert {(f.code, f.check, f.expected, f.actual) for f in rep.findings if f.status is Status.FAIL} == {
+        ("2-1", C05, "1198", "1199"), ("5-2", C03, "9200", "9700"), (None, C10, "767658", "770058")}
     assert rep.verdict == "fail"
 
 
