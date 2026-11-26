@@ -10,7 +10,7 @@
       "dod": "Identity tests in tests/test_check_act_skill.py fail naming which of missing file / unreadable header / wrong name / empty description is wrong, were red before .claude/skills/check-act/SKILL.md existed and pass now, with no model, network or subprocess call.",
       "files_hint": [".claude/skills/check-act/SKILL.md", "tests/test_check_act_skill.py"],
       "file": "docs/features/check-act-skill/tasks/T1-skill-identity.md",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "T2",
